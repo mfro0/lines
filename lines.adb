@@ -1,12 +1,12 @@
 with Ada.Unchecked_Conversion;
 with Interfaces.C; use Interfaces.C;
 with System;
-with Ada.Calendar;
+with Ada.Text_IO; use Ada.Text_IO;
 
 procedure Lines is
     package C renames Interfaces.C;
 
-    type Int_Array is array (Positive range <>) of C.short;
+    type Short_Array is array (Positive range <>) of C.short;
 
     -- AES/VDI Types
     type GRECT is record
@@ -21,10 +21,14 @@ procedure Lines is
 
     -- AES Functions
     function appl_init return C.short;
-    pragma Import (C, appl_init, "mt_appl_init");
+    pragma Import (C, appl_init, "appl_init");
 
-    procedure appl_exit;
-    pragma Import (C, appl_exit, "mt_appl_exit");
+    procedure mt_appl_exit(aes_global : System.Address);
+    pragma Import (C, mt_appl_exit, "mt_appl_exit");
+    procedure appl_exit is
+    begin
+        mt_appl_exit(aes_global);
+    end appl_exit;
 
     function  mt_graf_handle (w, h, cw, ch : access C.short; global_aes : System.Address) return C.short;
     pragma Import (C, mt_graf_handle, "mt_graf_handle");
@@ -33,23 +37,47 @@ procedure Lines is
         return mt_graf_handle(w, h, cw, ch, aes_global);
     end graf_handle;
 
-    function wind_create (kind : C.short; x, y, w, h : C.short) return C.short;
-    pragma Import (C, wind_create, "mt_wind_create");
+    function mt_wind_create (kind : C.short; x, y, w, h : C.short; aes_global : System.Address) return C.short;
+    pragma Import (C, mt_wind_create, "mt_wind_create");
+    function wind_create(kind, x, y, w, h : C.short) return C.short is
+    begin
+        return mt_wind_create(kind, x, y, w, h, aes_global);
+    end wind_create;
 
-    procedure wind_open (wh, x, y, w, h : C.short);
-    pragma Import (C, wind_open, "mt_wind_open");
+    procedure mt_wind_open (wh, x, y, w, h : C.short; aes_global : System.Address);
+    pragma Import (C, mt_wind_open, "mt_wind_open");
+    procedure wind_open(wh, x, y, w, h : C.short) is
+    begin
+        mt_wind_open(wh, x, y, w, h, aes_global);
+    end wind_open;
 
-    procedure wind_close (wh : C.short);
-    pragma Import (C, wind_close, "mt_wind_close");
+    procedure mt_wind_close (wh : C.short; aes_global : System.Address);
+    pragma Import(C, mt_wind_close, "mt_wind_close");
+    procedure wind_close(wh : C.short) is
+    begin
+        mt_wind_close(wh, aes_global);
+    end wind_close;
 
-    procedure wind_delete (wh : C.short);
-    pragma Import (C, wind_delete, "mt_wind_delete");
+    procedure mt_wind_delete (wh : C.short; aes_global : System.Address);
+    pragma Import(C, mt_wind_delete, "mt_wind_delete");
+    procedure wind_delete(wh : C.short) is
+    begin
+        mt_wind_delete(wh, aes_global);
+    end wind_delete;
 
-    procedure wind_get (wh, mode : C.short; x, y, w, h : access C.short);
-    pragma Import (C, wind_get, "mt_wind_get");
+    procedure mt_wind_get (wh, mode : C.short; x, y, w, h : access C.short; aes_global : System.Address);
+    pragma Import (C, mt_wind_get, "mt_wind_get");
+    procedure wind_get(wh, mode : C.short; x, y, w, h : access C.short) is
+    begin
+        mt_wind_get(wh, mode, x, y, w, h, aes_global);
+    end wind_get;
 
-    procedure wind_update (mode : C.short);
-    pragma Import (C, wind_update, "mt_wind_update");
+    procedure mt_wind_update(mode : C.short; aes_global : System.Address);
+    pragma Import (C, mt_wind_update, "mt_wind_update");
+    procedure wind_update(mode : C.short) is
+    begin
+        mt_wind_update(mode, aes_global);
+    end wind_update;
 
     -- VDI Functions
     type Work_Array is array (0 .. 10) of C.short;
@@ -82,40 +110,27 @@ procedure Lines is
     -- Event
     type Message_Array is array (0 .. 7) of C.short;
 
-    function mt_evnt_multi
-    (Typ            : C.short;
-     Clicks         : C.short;
-     Which_Button   : C.short;
-     Which_State    : C.short;
-     Enter_Exit1    : C.short;
-     In_1X, In_1y, In_1w, In_1h,
-     Enter_exit2,
-     In_2X, In_2y, In_2w, In_2h : C.short;
-     Mesag_Buf      : access Message_Array;
-     Interval       : C.unsigned_long;
-     Out_X, Out_Y   : access C.short;
-     Button_State, Key_State, Key, Return_Count : access C.short) return C.short;
+    function mt_evnt_multi(Typ, Clicks, Which_Button, Which_State : C.short;
+                           Enter_Exit1, In_1X, In_1y, In_1w, In_1h : C.short;
+                           Enter_exit2, In_2X, In_2y, In_2w, In_2h : C.short;
+                           Mesag_Buf : access Message_Array;
+                           Interval : C.unsigned_long;
+                           Out_X, Out_Y, Button_State, Key_State, Key, Return_Count : access C.short;
+                           global_aes : System.Address) return C.short;
     pragma Import(C, mt_evnt_multi, "mt_evnt_multi");
 
-    function evnt_multi
-        (Typ            : C.short;
-         Clicks         : C.short;
-         Which_Button   : C.short;
-         Which_State    : C.short;
-         Enter_Exit1    : C.short;
-         In_1x, In_1y, In_1w, In_1h,
-         Enter_Exit2,
-         In_2x, In_2y, In_2w, In_2h : C.short;
-         Mesag_Buf      : access Message_Array;
-         Interval       : C.unsigned_long;
-         Out_X, Out_Y   : access C.short;
-         Button_State, Key_State, Key, Return_Count : access C.short) return C.short is
+    function evnt_multi(Typ, Clicks, Which_Button, Which_State,
+                        Enter_Exit1, In_1x, In_1y, In_1w, In_1h : C.short;
+                        Enter_Exit2, In_2x, In_2y, In_2w, In_2h : C.short;
+                        Mesag_Buf : access Message_Array;
+                        Interval : C.unsigned_long;
+                        Out_X, Out_Y, Button_State, Key_State, Key, Return_Count : access C.short) return C.short is
     begin
         return mt_evnt_multi(Typ, Clicks, Which_Button, Which_State,
-                      Enter_Exit1, In_1x, In_1y, In_1w, In_1h,
-                      Enter_Exit2, In_2x, In_2y, In_2w, In_2h,
-                      Mesag_Buf, Interval, Out_X, Out_Y,
-                      Button_State, Key_State, Key, Return_Count);
+                             Enter_Exit1, In_1x, In_1y, In_1w, In_1h,
+                             Enter_Exit2, In_2x, In_2y, In_2w, In_2h,
+                             Mesag_Buf, Interval, Out_X, Out_Y,
+                             Button_State, Key_State, Key, Return_Count, aes_global);
     end evnt_multi;
 
 
@@ -146,16 +161,16 @@ procedure Lines is
 
     -- Data
     type Point is record
-        X, Y : C.short;
+        x, y : C.short;
     end record;
 
     type Line is Record
-        P1, P2  : Point;
+        p1, p2  : Point;
     end Record;
 
-    Max_Trail : constant := 5;
+    Max_Trail : constant := 30;
     Trail     : array (1 .. Max_Trail) of Line :=
-        (others => (P1 => (X => -1, Y => -1), P2 => (X => -1, Y => -1)));
+        (others => (p1 => (x => -1, y => -1), p2 => (x => -1, y => -1)));
 
 --    Colors    : constant array (1 .. Max_Trail) of C.short :=
 --       (C.unsigned_short(16#F800#), C.short(16#C000#), C.short(16#9000#),
@@ -178,12 +193,12 @@ procedure Lines is
         Points : array (1 .. 4) of aliased C.short;
     begin
         for I in Trail'First .. Trail'Last - 1 loop
-            if Trail(I + 1).P1.X >= 0 then
+            if Trail(I + 1).p1.x >= 0 then
                 vsl_color (Vdi_Handle, 1);
-                Points(1) := C.short (Trail(I).P1.X);
-                Points(2) := C.short (Trail(I).P1.Y);
-                Points(3) := C.short (Trail(I).P2.X);
-                Points(4) := C.short (Trail(I).P2.Y);
+                Points(1) := C.short (Trail(I).p1.x);
+                Points(2) := C.short (Trail(I).p1.y);
+                Points(3) := C.short (Trail(I).p2.x);
+                Points(4) := C.short (Trail(I).p2.y);
                 v_pline(Vdi_Handle, 2, Points (Points'First)'Access);
             end if;
         end loop;
@@ -206,18 +221,25 @@ procedure Lines is
 
     app_id  : C.short;
 begin
+Put_Line("0.0");
     app_id := appl_init;
-
+Put_Line("0");
     declare
         Work_In  : Work_Array := (10 => 2, others => 1);
         Work_Out : Int57_Array;
         Dummy    : aliased C.short := 0;
     begin
         Vdi_Handle := graf_handle (Dummy'Access, Dummy'Access, Dummy'Access, Dummy'Access);
+
+        Put_Line("1");
+
         v_opnvwk (Work_In, Vdi_Handle'Access, Work_Out);
+
+Put_Line("2");
     end;
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER, 50, 50, 320, 200);
+Put_Line("3");
     wind_open(Win, 50, 50, 320, 200);
 
     declare
@@ -239,24 +261,25 @@ begin
         p1 : Point := (Work_Area.g_x + 10, Work_Area.g_y + 10);
         p2 : Point := (Work_Area.g_x + Work_Area.g_w - 10,
                        Work_Area.g_y + Work_Area.g_h - 10);
-        dx1 : C.short := 4;
+        dx1 : C.short := 3;
         dy1 : C.short := 4;
-        dx2 : C.short := -4;
+        dx2 : C.short := -3;
         dy2 : C.short := -4;
         butdown : C.short;
         Timer_MS    : C.unsigned_long := 50;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
     begin
         loop
-            p1.X := p1.X + dx1;
-            p1.Y := p1.Y + dy1;
-            p2.X := p2.X + dx2;
-            p2.Y := p2.Y + dy2;
+            p1.x := p1.x + dx1; if p1.x >= Work_Area.g_x + Work_Area.g_w or p1.x < Work_Area.g_x then dx1 := -dx1; end if;
+            p1.y := p1.y + dy1; if p1.y >= Work_Area.g_y + Work_Area.g_h or p1.y < Work_Area.g_y then dy1 := -dy1; end if;
+            p2.x := p2.x + dx2; if p2.x >= Work_Area.g_x + Work_Area.g_w or p2.x < Work_Area.g_x then dx2 := -dx2; end if;
+            p2.y := p2.y + dy2; if p2.y >= Work_Area.g_y + Work_Area.g_h or p2.y < Work_Area.g_y then dy2 := -dy2; end if;
+
             -- Random point inside work area
             Update_Trail((p1, p2));
 
             Dummy := evnt_multi(MU_MESAG + MU_BUTTON + MU_KEYBD + MU_TIMER,
-                                16#0103#, 3, butdown,
+                                1, 1, butdown,
                                 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0,
                                 Msg'Access, Timer_MS, MX'Access, MY'Access,
