@@ -1,0 +1,20 @@
+
+project Lines is
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("lines.adb");
+
+   for Default_Language use "Ada";
+   for Target use "m68k-atari-mintelf";
+   package Builder is
+      for Executable("lines.adb") use "lines.prg";
+   end Builder;
+   package Compiler is
+      for Switches("Ada") use ("-gnat2022", "-O2", "-gnatyr", "-ffunction-sections", "-fdata-sections");
+   end Compiler;
+   package Linker is
+      for Switches("Ada") use ("-s", "-Wl,--gc-sections", "-lgem");
+      for Map_File_Option use "-Wl,-Map,";
+   end Linker;
+end Lines;
