@@ -10,7 +10,7 @@ package GEM is
     type GRECT is record
 	g_x, g_y, g_w, g_h : C.short;
     end record;
-    pragma Convention (C, GRECT);
+    pragma Convention(C, GRECT);
 
     subtype AES_Id is C.short;
 
@@ -26,15 +26,15 @@ package GEM is
     procedure appl_exit;
 
     function  mt_graf_handle (w, h, cw, ch : access C.short; global_aes : System.Address) return C.short;
-    pragma Import (C, mt_graf_handle, "mt_graf_handle");
+    pragma Import(C, mt_graf_handle, "mt_graf_handle");
     function graf_handle(w, h, cw, ch : access C.short) return C.short;
 
     function mt_wind_create (kind : C.short; x, y, w, h : C.short; aes_global : System.Address) return C.short;
-    pragma Import (C, mt_wind_create, "mt_wind_create");
+    pragma Import(C, mt_wind_create, "mt_wind_create");
     function wind_create(kind : C.short; x, y, w, h : C.short) return C.short;
 
     procedure mt_wind_open (wh, x, y, w, h : C.short; aes_global : System.Address);
-    pragma Import (C, mt_wind_open, "mt_wind_open");
+    pragma Import(C, mt_wind_open, "mt_wind_open");
     procedure wind_open(wh, x, y, w, h : C.short);
 
     procedure mt_wind_close (wh : C.short; aes_global : System.Address);
@@ -46,11 +46,11 @@ package GEM is
     procedure wind_delete(wh : C.short);
 
     procedure mt_wind_get (wh, mode : C.short; x, y, w, h : access C.short; aes_global : System.Address);
-    pragma Import (C, mt_wind_get, "mt_wind_get");
+    pragma Import(C, mt_wind_get, "mt_wind_get");
     procedure wind_get(wh, mode : C.short; x, y, w, h : access C.short);
 
     procedure mt_wind_update(mode : C.short; aes_global : System.Address);
-    pragma Import (C, mt_wind_update, "mt_wind_update");
+    pragma Import(C, mt_wind_update, "mt_wind_update");
     procedure wind_update(mode : C.short);
 
     -- VDI Functions
@@ -58,28 +58,28 @@ package GEM is
     type Int57_Array is array (0 .. 56) of C.short;
 
     procedure v_opnvwk (work_in : Work_Array; handle : access C.short; work_out : Int57_Array);
-    pragma Import (C, v_opnvwk, "v_opnvwk");
+    pragma Import(C, v_opnvwk, "v_opnvwk");
 
     procedure v_clsvwk (handle : C.short);
-    pragma Import (C, v_clsvwk, "v_clsvwk");
+    pragma Import(C, v_clsvwk, "v_clsvwk");
 
     procedure v_pline (handle : C.short; count : C.short; points : access C.short);
-    pragma Import (C, v_pline, "v_pline");
+    pragma Import(C, v_pline, "v_pline");
 
     procedure vs_clip (handle, on : C.short; rect : access C.short);
-    pragma Import (C, vs_clip, "vs_clip");
+    pragma Import(C, vs_clip, "vs_clip");
 
     procedure vr_recfl (handle : C.short; rect : access C.short);
-    pragma Import (C, vr_recfl, "vr_recfl");
+    pragma Import(C, vr_recfl, "vr_recfl");
 
     procedure vsf_interior (handle, style : C.short);
-    pragma Import (C, vsf_interior, "vsf_interior");
+    pragma Import(C, vsf_interior, "vsf_interior");
 
     procedure vsf_color (handle, color : C.short);
-    pragma Import (C, vsf_color, "vsf_color");
+    pragma Import(C, vsf_color, "vsf_color");
 
     procedure vsl_color (handle, color : C.short);
-    pragma Import (C, vsl_color, "vsl_color");
+    pragma Import(C, vsl_color, "vsl_color");
 
     -- Event
     type Message_Array is array (0 .. 7) of C.short;
@@ -120,4 +120,10 @@ package GEM is
     MU_NORM_KEYBD       : constant C.short := 16#0100#;
     MU_DYNAMIC_KEYBD    : constant C.short := 16#0200#;
     X_MU_DIALOG         : constant C.short := 16#0400#;
+
+    WF_WORKXYWH		: constant C.short := 4;
+    WF_FULLXYWH		: constant C.short := 7;
+    WF_FIRSTXYWH	: constant C.short := 11;
+    WF_NEXTXYWH		: constant C.short := 12;
+
 end GEM;

@@ -1,4 +1,5 @@
 package body GEM is
+    use C;
 
     procedure appl_exit is
     begin

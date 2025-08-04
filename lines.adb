@@ -6,8 +6,7 @@ with GEM; use GEM;
 
 
 procedure Lines is
-    package C renames Interfaces.C;
-
+    package C renames Interfaces.C; use C;
     -- Data
     type Point is record
         x, y : C.short;
@@ -17,13 +16,16 @@ procedure Lines is
         p1, p2  : Point;
     end Record;
 
-    Max_Trail : constant := 30;
+    Max_Trail : constant := 25;
     Trail     : array (1 .. Max_Trail) of Line :=
         (others => (p1 => (x => -1, y => -1), p2 => (x => -1, y => -1)));
 
---    Colors    : constant array (1 .. Max_Trail) of C.short :=
---       (C.unsigned_short(16#F800#), C.short(16#C000#), C.short(16#9000#),
---        C.short(16#6000#), C.short(16#3000#));
+    Colors    : constant array (1 .. Max_Trail) of C.unsigned_short := (16#F800#,
+                                                                        16#C000#,
+                                                                        16#9000#,
+                                                                        16#6000#,
+                                                                        16#3000#,
+                                                                        others => 0);
 
     -- Handles
     Vdi_Handle : aliased C.short;
@@ -53,19 +55,79 @@ procedure Lines is
         end loop;
     end Draw_Trail;
 
+    function Max(a, b : C.short) return C.short is
+    begin
+        if a > b then
+            return a;
+        else
+            return b;
+        end if;
+    end Max;
+
+    function Min(a, b : C.short) return C.short is
+    begin
+        if a < b then
+            return a;
+        else
+            return b;
+        end if;
+    end Min;
+
+    type Rectangle is Record
+        x, y, w, h : aliased C.short;
+    end Record;
+
+    function Rect_Intersect(R1, R2 : in out Rectangle) return Boolean is
+        tx, ty, tw, th      : C.short;
+        Ret                 : Boolean;
+    begin
+        tx := Max(R2.x, R1.x);
+        tw := Min(R2.x + R2.w, R1.x + R1.w) - tx;
+
+        Ret := (0 < tw);
+
+        if Ret then
+            ty := Max(R2.y, R1.y);
+            th := Min(R2.y + R2.h, R1.y + R1.h) - ty;
+
+            Ret := (0 < th);
+
+            if Ret then
+                R2.x := tx;
+                R2.y := ty;
+                R2.w := tw;
+                R2.h := th;
+            end if;
+        end if;
+        return Ret;
+    end Rect_Intersect;
+
     procedure Redraw_Window is
         Clip : array (1 .. 4) of aliased C.short;
+
     begin
-        Clip(1) := C.short (Work_Area.g_x);
-        Clip(2) := C.short (Work_Area.g_y);
-        Clip(3) := C.short (Work_Area.g_x + Work_Area.g_w - 1);
-        Clip(4) := C.short (Work_Area.g_y + Work_Area.g_h - 1);
-        vs_clip (Vdi_Handle, 1, Clip(Clip'First)'Access);
-        vsf_interior (Vdi_Handle, FIS_SOLID);
-        vsf_color (Vdi_Handle, 0);
-        vr_recfl (Vdi_Handle, Clip(Clip'First)'Access);
-        Draw_Trail;
-        vs_clip (Vdi_Handle, 0, Clip(Clip'First)'Access);
+        declare
+            r1, r2  : Rectangle;
+        begin
+            wind_get(Win, WF_WORKXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
+            wind_get(Win, WF_FIRSTXYWH, r2.x'Access, r2.y'Access, r2.w'Access, r2.h'Access);
+
+            while r2.w > 0 and r2.h > 0 loop
+                if Rect_Intersect(r1, r2) then
+                    Clip(1) := r2.x;
+                    Clip(2) := r2.y;
+                    Clip(3) := r2.x + r2.w - 1;
+                    Clip(4) := r2.y + r2.h - 1;
+                    vs_clip(Vdi_Handle, 1, Clip(Clip'First)'Access);
+                    vsf_interior(Vdi_Handle, FIS_SOLID);
+                    vsf_color(Vdi_Handle, 0);
+                    vr_recfl(Vdi_Handle, Clip(Clip'First)'Access);
+                    Draw_Trail;
+                    vs_clip(Vdi_Handle, 0, Clip(Clip'First)'Access);
+                end if;
+                wind_get(Win, WF_NEXTXYWH, r2.x'Access, r2.y'Access, r2.w'Access, r2.h'Access);
+            end loop;
+        end;
     end Redraw_Window;
 
     app_id  : C.short;
@@ -76,9 +138,9 @@ begin
         Work_Out : Int57_Array;
         Dummy    : aliased C.short := 0;
     begin
-        Vdi_Handle := graf_handle (Dummy'Access, Dummy'Access, Dummy'Access, Dummy'Access);
+        Vdi_Handle := graf_handle(Dummy'Access, Dummy'Access, Dummy'Access, Dummy'Access);
 
-        v_opnvwk (Work_In, Vdi_Handle'Access, Work_Out);
+        v_opnvwk(Work_In, Vdi_Handle'Access, Work_Out);
     end;
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER, 50, 50, 320, 200);
@@ -96,18 +158,18 @@ begin
 
     -- Main loop
     declare
-        Msg     : aliased Message_Array;
-        Quit    : Boolean := False;
-        MX, MY  : aliased C.short := 0;
-        Dummy	: C.short;
-        p1 : Point := (Work_Area.g_x + 10, Work_Area.g_y + 10);
-        p2 : Point := (Work_Area.g_x + Work_Area.g_w - 10,
+        Msg         : aliased Message_Array;
+        Quit        : Boolean := False;
+        MX, MY      : aliased C.short := 0;
+        Dummy       : C.short;
+        p1          : Point := (Work_Area.g_x + 10, Work_Area.g_y + 10);
+        p2          : Point := (Work_Area.g_x + Work_Area.g_w - 10,
                        Work_Area.g_y + Work_Area.g_h - 10);
-        dx1 : C.short := 3;
-        dy1 : C.short := 4;
-        dx2 : C.short := -3;
-        dy2 : C.short := -4;
-        butdown : C.short;
+        dx1         : C.short := 3;
+        dy1         : C.short := 4;
+        dx2         : C.short := -3;
+        dy2         : C.short := -4;
+        butdown     : C.short;
         Timer_MS    : C.unsigned_long := 50;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
     begin
@@ -129,9 +191,9 @@ begin
                                 Key_Return'Access, Ret'Access);
             begin
                 if Msg(0) = WM_REDRAW then
-                    wind_update (1);
+                    wind_update(1);
                     Redraw_Window;
-                    wind_update (0);
+                    wind_update(0);
                 elsif Msg(0) = WM_CLOSED then
                     Quit := True;
                 end if;
@@ -142,8 +204,8 @@ begin
         end loop;
     end;
 
-    wind_close (Win);
-    wind_delete (Win);
-    v_clsvwk (Vdi_Handle);
+    wind_close(Win);
+    wind_delete(Win);
+    v_clsvwk(Vdi_Handle);
     appl_exit;
 end Lines;
