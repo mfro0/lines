@@ -11,6 +11,11 @@ package body GEM is
 	return mt_graf_handle(w, h, cw, ch, aes_global);
     end graf_handle;
 
+    procedure graf_mouse(Mouse_Number : Mouse_Form; MForm : System.Address) is
+    begin
+        mt_graf_mouse(Mouse_Form'Pos(Mouse_Number), System.Null_Address, aes_global);
+    end graf_mouse;
+
     function wind_create(kind, x, y, w, h : C.short) return C.short is
     begin
 	return mt_wind_create(kind, x, y, w, h, aes_global);

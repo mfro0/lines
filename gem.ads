@@ -29,6 +29,13 @@ package GEM is
     pragma Import(C, mt_graf_handle, "mt_graf_handle");
     function graf_handle(w, h, cw, ch : access C.short) return C.short;
 
+    type Mouse_Form is (ARROW, TEXT_CRSR, HOURGLASS, POINT_HAND, FLAT_HAND, THIN_CROSS, THICK_CROSS,
+                        OUTLN_CROSS, X_LFTRT,X_UPDOWN, USER_DEF, M_OFF, M_ON);
+
+    procedure mt_graf_mouse(Mouse_Number : C.short; Mouse_Form : System.Address; aes_global : System.Address);
+    pragma Import(C, mt_graf_mouse, "mt_graf_mouse");
+    procedure graf_mouse(Mouse_Number : Mouse_Form; MForm : System.Address);
+    
     function mt_wind_create (kind : C.short; x, y, w, h : C.short; aes_global : System.Address) return C.short;
     pragma Import(C, mt_wind_create, "mt_wind_create");
     function wind_create(kind : C.short; x, y, w, h : C.short) return C.short;

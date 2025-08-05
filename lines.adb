@@ -7,6 +7,7 @@ with GEM; use GEM;
 
 procedure Lines is
     package C renames Interfaces.C; use C;
+    
     -- Data
     type Point is record
         x, y : C.short;
@@ -37,24 +38,24 @@ procedure Lines is
 
     procedure Update_Trail(New_Line : Line) is
     begin
-        for I in reverse Trail'First + 1 .. Trail'Last loop
-            Trail(I) := Trail(I - 1);
+        for i in reverse Trail'First + 1 .. Trail'Last loop
+            Trail(i) := Trail(i - 1);
         end loop;
         Trail(1) := New_Line;
     end Update_Trail;
 
     procedure Draw_Trail is
-        Points : array (1 .. 4) of aliased C.short;
+        Points : array(1 .. 4) of aliased C.short;
     begin
-        for I in Trail'First .. Trail'Last - 1 loop
-            if Trail(I + 1).p1.x >= 0 then
-                vsl_color (Vdi_Handle, 1);
-                Points(1) := C.short (Trail(I).p1.x);
-                Points(2) := C.short (Trail(I).p1.y);
-                Points(3) := C.short (Trail(I).p2.x);
-                Points(4) := C.short (Trail(I).p2.y);
-                vsl_color(Vdi_Handle, Trail(I).color);
-                v_pline(Vdi_Handle, 2, Points (Points'First)'Access);
+        for i in Trail'First .. Trail'Last - 1 loop
+            if Trail(i + 1).p1.x >= 0 then
+                vsl_color(Vdi_Handle, 1);
+                Points(1) := C.short (Trail(i).p1.x);
+                Points(2) := C.short (Trail(i).p1.y);
+                Points(3) := C.short (Trail(i).p2.x);
+                Points(4) := C.short (Trail(i).p2.y);
+                vsl_color(Vdi_Handle, Trail(i).color);
+                v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
             end if;
         end loop;
     end Draw_Trail;
@@ -77,11 +78,7 @@ procedure Lines is
         end if;
     end Min;
 
-    type Rectangle is Record
-        x, y, w, h : aliased C.short;
-    end Record;
-
-    function Rect_Intersect(R1, R2 : in out Rectangle) return Boolean is
+    function Rect_Intersect(R1 : in Rectangle; R2 : in out Rectangle) return Boolean is
         tx, ty, tw, th      : C.short;
         Ret                 : Boolean;
     begin
@@ -111,13 +108,13 @@ procedure Lines is
 
     begin
         declare
-            r1, r2  : Rectangle;
+            r2  : Rectangle;
         begin
-            wind_get(Win, WF_WORKXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
+            -- wind_get(Win, WF_WORKXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
             wind_get(Win, WF_FIRSTXYWH, r2.x'Access, r2.y'Access, r2.w'Access, r2.h'Access);
 
             while r2.w > 0 and r2.h > 0 loop
-                if Rect_Intersect(r1, r2) then
+                if Rect_Intersect(Work_Area, r2) then
                     Clip(1) := r2.x;
                     Clip(2) := r2.y;
                     Clip(3) := r2.x + r2.w - 1;
@@ -146,6 +143,7 @@ begin
         Vdi_Handle := graf_handle(Dummy'Access, Dummy'Access, Dummy'Access, Dummy'Access);
 
         v_opnvwk(Work_In, Vdi_Handle'Access, Work_Out);
+        graf_mouse(ARROW, System.Null_Address);
     end;
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER + SIZER, 50, 50, 320, 200);
