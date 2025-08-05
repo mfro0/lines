@@ -1,4 +1,5 @@
 with Interfaces.C;
+with Interfaces.C.Strings;
 with System;
 
 package GEM is
@@ -60,10 +61,13 @@ package GEM is
     pragma Import(C, mt_wind_get, "mt_wind_get");
     procedure wind_get(wh, mode : C.short; x, y, w, h : access C.short);
     
-    procedure mt_wind_set(wh, mode : C.short; x, y, w, h : C.short; aes_global : System.Address
-    );
+    procedure mt_wind_set(wh, mode : C.short; x, y, w, h : C.short; aes_global : System.Address);
     pragma Import(C, mt_wind_set, "mt_wind_set");
     procedure wind_set(wh, mode : C.short; x, y, w, h : C.short);
+    procedure mt_wind_set_str(wh, mode : C.short; str : C.Strings.chars_ptr; aes_global : System.Address);
+    pragma Import(C, mt_wind_set_str, "mt_wind_set_str");
+
+    procedure wind_set_str(wh, mode : C.short; str : C.Strings.chars_ptr);
 
     procedure mt_wind_update(mode : C.short; aes_global : System.Address);
     pragma Import(C, mt_wind_update, "mt_wind_update");

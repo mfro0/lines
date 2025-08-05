@@ -1,5 +1,6 @@
 with Ada.Unchecked_Conversion;
 with Interfaces.C; use Interfaces.C;
+with Interfaces.C.Strings; use Interfaces.C.Strings;
 with System;
 with Ada.Text_IO;
 with GEM; use GEM;
@@ -152,6 +153,7 @@ begin
     end;
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER + SIZER, 50, 50, 320, 200);
+    wind_set_str(Win, WF_NAME, New_String("Lines"));
     wind_open(Win, 50, 50, 320, 200);
     wind_get(Win, WF_CURRXYWH, Work_Area.x'Access, Work_Area.y'Access, Work_Area.w'Access, Work_Area.h'Access);
 
