@@ -35,6 +35,11 @@ package body GEM is
     begin
 	mt_wind_get(wh, mode, x, y, w, h, aes_global);
     end wind_get;
+    
+    procedure wind_set(wh, mode : C.short; x, y, w, h : C.short) is
+    begin
+        mt_wind_set(wh, mode, x, y, w, h, aes_global);
+    end wind_set;
 
     procedure wind_update(mode : C.short) is
     begin

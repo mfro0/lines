@@ -14,11 +14,14 @@ procedure Lines is
 
     type Line is Record
         p1, p2  : Point;
+        color   : C.short;
     end Record;
 
     Max_Trail : constant := 25;
     Trail     : array (1 .. Max_Trail) of Line :=
-        (others => (p1 => (x => -1, y => -1), p2 => (x => -1, y => -1)));
+        (others => (p1 => (x => -1, y => -1),
+                    p2 => (x => -1, y => -1),
+                    others => 0));
 
     Colors    : constant array (1 .. Max_Trail) of C.unsigned_short := (16#F800#,
                                                                         16#C000#,
@@ -50,6 +53,7 @@ procedure Lines is
                 Points(2) := C.short (Trail(I).p1.y);
                 Points(3) := C.short (Trail(I).p2.x);
                 Points(4) := C.short (Trail(I).p2.y);
+                vsl_color(Vdi_Handle, Trail(I).color);
                 v_pline(Vdi_Handle, 2, Points (Points'First)'Access);
             end if;
         end loop;
@@ -120,7 +124,7 @@ procedure Lines is
                     Clip(4) := r2.y + r2.h - 1;
                     vs_clip(Vdi_Handle, 1, Clip(Clip'First)'Access);
                     vsf_interior(Vdi_Handle, FIS_SOLID);
-                    vsf_color(Vdi_Handle, 0);
+                    vsf_color(Vdi_Handle, 1);
                     vr_recfl(Vdi_Handle, Clip(Clip'First)'Access);
                     Draw_Trail;
                     vs_clip(Vdi_Handle, 0, Clip(Clip'First)'Access);
@@ -131,6 +135,7 @@ procedure Lines is
     end Redraw_Window;
 
     app_id  : C.short;
+    col     : C.short := 0;
 begin
     app_id := appl_init;
     declare
@@ -143,7 +148,7 @@ begin
         v_opnvwk(Work_In, Vdi_Handle'Access, Work_Out);
     end;
 
-    Win := wind_create(NAME + CLOSER + MOVER + FULLER, 50, 50, 320, 200);
+    Win := wind_create(NAME + CLOSER + MOVER + FULLER + SIZER, 50, 50, 320, 200);
     wind_open(Win, 50, 50, 320, 200);
 
     declare
@@ -170,8 +175,9 @@ begin
         dx2         : C.short := -3;
         dy2         : C.short := -5;
         butdown     : C.short;
-        Timer_MS    : C.unsigned_long := 50;
+        Timer_MS    : C.unsigned_long := 20;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
+        r1, r2      : Rectangle;
     begin
         loop
             p1.x := p1.x + dx1; if p1.x >= Work_Area.g_x + Work_Area.g_w or p1.x < Work_Area.g_x then dx1 := -dx1; end if;
@@ -180,7 +186,8 @@ begin
             p2.y := p2.y + dy2; if p2.y >= Work_Area.g_y + Work_Area.g_h or p2.y < Work_Area.g_y then dy2 := -dy2; end if;
 
             -- Random point inside work area
-            Update_Trail((p1, p2));
+            Update_Trail((p1, p2, col));
+            col := (col + 1) mod 255;
 
             Dummy := evnt_multi(MU_MESAG + MU_BUTTON + MU_KEYBD + MU_TIMER,
                                 1, 1, butdown,
@@ -194,12 +201,16 @@ begin
                     wind_update(1);
                     Redraw_Window;
                     wind_update(0);
+                elsif Msg(0) = WM_MOVED or
+                      Msg(0) = WM_SIZED or
+                      Msg(0) = WM_FULLED then
+                    wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
+                    wind_get(Win, WF_CURRXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
+                    Work_Area := (r1.x, r1.y, r1.w, r1.h);
                 elsif Msg(0) = WM_CLOSED then
                     Quit := True;
                 end if;
             end;
-
-            Redraw_Window;
             exit when Quit;
         end loop;
     end;

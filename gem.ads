@@ -48,6 +48,11 @@ package GEM is
     procedure mt_wind_get (wh, mode : C.short; x, y, w, h : access C.short; aes_global : System.Address);
     pragma Import(C, mt_wind_get, "mt_wind_get");
     procedure wind_get(wh, mode : C.short; x, y, w, h : access C.short);
+    
+    procedure mt_wind_set(wh, mode : C.short; x, y, w, h : C.short; aes_global : System.Address
+    );
+    pragma Import(C, mt_wind_set, "mt_wind_set");
+    procedure wind_set(wh, mode : C.short; x, y, w, h : C.short);
 
     procedure mt_wind_update(mode : C.short; aes_global : System.Address);
     pragma Import(C, mt_wind_update, "mt_wind_update");
@@ -100,12 +105,48 @@ package GEM is
 			Out_X, Out_Y, Button_State, Key_State, Key, Return_Count : access C.short) return C.short;
 
     -- Constants
-    WM_REDRAW  : constant := 20;
-    WM_CLOSED  : constant := 21;
-    NAME       : constant := 1;
-    CLOSER     : constant := 2;
-    MOVER      : constant := 4;
-    FULLER     : constant := 8;
+    WM_REDRAW       : constant := 20;
+    WM_TOPPED       : constant := 21;
+    WM_CLOSED       : constant := 22;
+    WM_FULLED       : constant := 23;
+    WM_ARROWED      : constant := 24;
+    WM_HSLID        : constant := 25;
+    WM_VSLID        : constant := 26;
+    WM_SIZED        : constant := 27;
+    WM_MOVED        : constant := 28;
+    WM_NEWTOP       : constant := 29;
+    WM_UNTOPPED     : constant := 30;
+    WM_ONTOP        : constant := 31;
+    WM_BACKDROPPED  : constant := 31;
+    WM_BOTTOMED     : constant := 33;
+    WM_ICONIFY      : constant := 34;
+    WM_UNICONIFY    : constant := 35;
+    WM_ALLICONIFY   : constant := 36;
+    WM_TOOLBAR      : constant := 37;
+    AC_OPEN         : constant := 40;
+    AC_CLOSE        : constant := 41;
+    AP_TERM         : constant := 50;
+    WM_M_BDROPPED   : constant := 100;
+    WM_SHADED       : constant := 22360;
+    WM_UNSHADED     : constant := 22361;
+    
+    NAME        : constant := 1;
+    CLOSER      : constant := 2;
+    MOVER       : constant := 4;
+    FULLER      : constant := 8;
+    INFO        : constant := 16#10#;
+    SIZER       : constant := 16#20#;
+    UPARROW     : constant := 16#40#;
+    DNARROW     : constant := 16#80#;
+    VSLIDE      : constant := 16#100#;
+    LFARROW     : constant := 16#200#;
+    RTARROW     : constant := 16#400#;
+    HSLIDE      : constant := 16#800#;
+    HOTCLOSEBOX : constant := 16#1000#;
+    MENUBAR     : constant := 16#2000#;
+    BACKDROP    : constant := 16#4000#;
+    ICONIFIER   : constant := 16#8000#;
+    
 
     FIS_SOLID  : constant := 1;
 
@@ -121,9 +162,22 @@ package GEM is
     MU_DYNAMIC_KEYBD    : constant C.short := 16#0200#;
     X_MU_DIALOG         : constant C.short := 16#0400#;
 
+    WF_KIND             : constant C.short := 1;
+    WF_NAME             : constant C.short := 2;
+    WF_INFO             : constant C.short := 3;
     WF_WORKXYWH		: constant C.short := 4;
+    WF_CURRXYWH         : constant C.short := 5;
+    WF_PREVXYWH         : constant C.short := 6;
     WF_FULLXYWH		: constant C.short := 7;
+    WF_HSLIDE           : constant C.short := 8;
+    WF_VSLIDE           : constant C.short := 9;
+    WF_TOP              : constant C.short := 10;
     WF_FIRSTXYWH	: constant C.short := 11;
     WF_NEXTXYWH		: constant C.short := 12;
-
+    WF_NEWDESK          : constant C.short := 14;
+    WF_HSLSIZE          : constant C.short := 15;
+    WF_VSLSIZE          : constant C.short := 16;
+    WF_ICONIFY          : constant C.short := 26;
+    WF_TOOLBAR          : constant C.short := 30;
+    WF_MENU             : constant C.short := 33;
 end GEM;
