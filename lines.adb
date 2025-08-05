@@ -18,7 +18,7 @@ procedure Lines is
         color   : C.short;
     end Record;
 
-    Max_Trail : constant := 25;
+    Max_Trail : constant := 15;
     Trail     : array (1 .. Max_Trail) of Line :=
         (others => (p1 => (x => -1, y => -1),
                     p2 => (x => -1, y => -1),
@@ -196,7 +196,7 @@ begin
                 elsif Msg(0) = WM_MOVED or
                       Msg(0) = WM_SIZED then
                     wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
-                    wind_get(Win, WF_CURRXYWH, Work_Area.x'Access, Work_Area.y'Access,
+                    wind_get(Win, WF_WORKXYWH, Work_Area.x'Access, Work_Area.y'Access,
                                                Work_Area.w'Access, Work_Area.h'Access);
                     Send_Redraw(Win, Msg(4), Msg(5), Msg(6), Msg(7));
                 elsif Msg(0) = WM_FULLED then
