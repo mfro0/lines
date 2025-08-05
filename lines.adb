@@ -168,7 +168,7 @@ begin
         dx1         : C.short := 3;
         dy1         : C.short := 4;
         dx2         : C.short := -3;
-        dy2         : C.short := -4;
+        dy2         : C.short := -5;
         butdown     : C.short;
         Timer_MS    : C.unsigned_long := 50;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
