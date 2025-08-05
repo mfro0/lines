@@ -134,7 +134,7 @@ procedure Lines is
     procedure Send_Redraw(Win : C.short; x, y, w, h : C.short) is
         Message : Array(0 .. 7) of aliased C.short := (WM_REDRAW, x, y, w, h, others => 0);
     begin
-        appl_write(app_id, 16, Message(0)'Access);
+        appl_write(app_id, Message'Length * C.short'Size / System.Storage_Unit, Message(0)'Access);
     end Send_Redraw;
     
     col     : C.short := 0;
@@ -176,7 +176,16 @@ begin
             p1.y := p1.y + dy1; if p1.y >= Work_Area.h or p1.y < 0 then dy1 := -dy1; end if;
             p2.x := p2.x + dx2; if p2.x >= Work_Area.w or p2.x < 0 then dx2 := -dx2; end if;
             p2.y := p2.y + dy2; if p2.y >= Work_Area.h or p2.y < 0 then dy2 := -dy2; end if;
-
+            if p1.x < 0 then p1.x := 0; end if;
+            if p1.x >= Work_Area.w then p1.x := Work_Area.w - 1; end if;
+            if p2.x < 0 then p2.x := 0; end if;
+            if p2.x >= Work_Area.w then p2.x := Work_Area.w - 1; end if;
+            
+            if p1.y < 0 then p1.y := 0; end if;
+            if p1.y >= Work_Area.h then p1.y := Work_Area.h - 1; end if;
+            if p2.y < 0 then p2.y := 0; end if;
+            if p2.y >= Work_Area.h then p2.y := Work_Area.h - 1; end if;
+            
             -- Random point inside work area
             Update_Trail((p1, p2, col));
             col := (col + 1) mod 255;
@@ -188,23 +197,21 @@ begin
                                 Msg'Access, Timer_MS, MX'Access, MY'Access,
                                 Mb_Return'Access, Key_State'Access,
                                 Key_Return'Access, Ret'Access);
-            begin
-                if Msg(0) = WM_REDRAW then
-                    wind_update(1);
-                    Redraw_Window;
-                    wind_update(0);
-                elsif Msg(0) = WM_MOVED or
-                      Msg(0) = WM_SIZED then
-                    wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
-                    wind_get(Win, WF_WORKXYWH, Work_Area.x'Access, Work_Area.y'Access,
-                                               Work_Area.w'Access, Work_Area.h'Access);
-                    Send_Redraw(Win, Msg(4), Msg(5), Msg(6), Msg(7));
-                elsif Msg(0) = WM_FULLED then
-                    null;
-                elsif Msg(0) = WM_CLOSED then
-                    Quit := True;
-                end if;
-            end;
+            if Msg(0) = WM_REDRAW then
+                wind_update(1);
+                Redraw_Window;
+                wind_update(0);
+            elsif Msg(0) = WM_MOVED or
+                Msg(0) = WM_SIZED then
+                wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
+                wind_get(Win, WF_WORKXYWH, Work_Area.x'Access, Work_Area.y'Access,
+                                           Work_Area.w'Access, Work_Area.h'Access);
+                Send_Redraw(Win, Work_Area.x, Work_Area.y, Work_Area.w, Work_Area.h);
+            elsif Msg(0) = WM_FULLED then
+                null;
+            elsif Msg(0) = WM_CLOSED then
+                Quit := True;
+            end if;
             exit when Quit;
         end loop;
     end;
