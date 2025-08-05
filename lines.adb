@@ -33,7 +33,7 @@ procedure Lines is
     -- Handles
     Vdi_Handle : aliased C.short;
     Win        : C.short;
-    Work_Area  : GRECT;
+    Work_Area  : Rectangle;
 
     procedure Update_Trail(New_Line : Line) is
     begin
@@ -150,16 +150,7 @@ begin
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER + SIZER, 50, 50, 320, 200);
     wind_open(Win, 50, 50, 320, 200);
-
-    declare
-        X, Y, W, H : aliased C.short;
-    begin
-        wind_get(Win, 4, X'Access, Y'Access, W'Access, H'Access);
-        Work_Area.g_x := X;
-        Work_Area.g_y := Y;
-        Work_Area.g_w := W;
-        Work_Area.g_h := H;
-    end;
+    wind_get(Win, 4, Work_Area.x'Access, Work_Area.y'Access, Work_Area.w'Access, Work_Area.h'Access);
 
     -- Main loop
     declare
@@ -167,9 +158,9 @@ begin
         Quit        : Boolean := False;
         MX, MY      : aliased C.short := 0;
         Dummy       : C.short;
-        p1          : Point := (Work_Area.g_x + 10, Work_Area.g_y + 10);
-        p2          : Point := (Work_Area.g_x + Work_Area.g_w - 10,
-                       Work_Area.g_y + Work_Area.g_h - 10);
+        p1          : Point := (Work_Area.x + 10, Work_Area.y + 10);
+        p2          : Point := (Work_Area.x + Work_Area.w - 10,
+                                Work_Area.y + Work_Area.h - 10);
         dx1         : C.short := 3;
         dy1         : C.short := 4;
         dx2         : C.short := -3;
@@ -177,13 +168,12 @@ begin
         butdown     : C.short;
         Timer_MS    : C.unsigned_long := 20;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
-        r1, r2      : Rectangle;
     begin
         loop
-            p1.x := p1.x + dx1; if p1.x >= Work_Area.g_x + Work_Area.g_w or p1.x < Work_Area.g_x then dx1 := -dx1; end if;
-            p1.y := p1.y + dy1; if p1.y >= Work_Area.g_y + Work_Area.g_h or p1.y < Work_Area.g_y then dy1 := -dy1; end if;
-            p2.x := p2.x + dx2; if p2.x >= Work_Area.g_x + Work_Area.g_w or p2.x < Work_Area.g_x then dx2 := -dx2; end if;
-            p2.y := p2.y + dy2; if p2.y >= Work_Area.g_y + Work_Area.g_h or p2.y < Work_Area.g_y then dy2 := -dy2; end if;
+            p1.x := p1.x + dx1; if p1.x >= Work_Area.x + Work_Area.w or p1.x < Work_Area.x then dx1 := -dx1; end if;
+            p1.y := p1.y + dy1; if p1.y >= Work_Area.y + Work_Area.h or p1.y < Work_Area.y then dy1 := -dy1; end if;
+            p2.x := p2.x + dx2; if p2.x >= Work_Area.x + Work_Area.w or p2.x < Work_Area.x then dx2 := -dx2; end if;
+            p2.y := p2.y + dy2; if p2.y >= Work_Area.y + Work_Area.h or p2.y < Work_Area.y then dy2 := -dy2; end if;
 
             -- Random point inside work area
             Update_Trail((p1, p2, col));
@@ -202,11 +192,12 @@ begin
                     Redraw_Window;
                     wind_update(0);
                 elsif Msg(0) = WM_MOVED or
-                      Msg(0) = WM_SIZED or
-                      Msg(0) = WM_FULLED then
+                      Msg(0) = WM_SIZED then
                     wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
-                    wind_get(Win, WF_CURRXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
-                    Work_Area := (r1.x, r1.y, r1.w, r1.h);
+                    wind_get(Win, WF_CURRXYWH, Work_Area.x'Access, Work_Area.y'Access,
+                                               Work_Area.w'Access, Work_Area.h'Access);
+                elsif Msg(0) = WM_FULLED then
+                    null;
                 elsif Msg(0) = WM_CLOSED then
                     Quit := True;
                 end if;

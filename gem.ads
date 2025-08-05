@@ -7,10 +7,10 @@ package GEM is
     type Short_Array is array (Positive range <>) of C.short;
 
     -- AES/VDI Types
-    type GRECT is record
-	g_x, g_y, g_w, g_h : C.short;
+    type Rectangle is record
+	x, y, w, h : aliased C.short;
     end record;
-    pragma Convention(C, GRECT);
+    pragma Convention(C, Rectangle);
 
     subtype AES_Id is C.short;
 
