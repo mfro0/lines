@@ -25,6 +25,10 @@ package GEM is
     pragma Import (C, mt_appl_exit, "mt_appl_exit");
     procedure appl_exit;
 
+    procedure mt_appl_write(appl_id : C.short; Message_Length : C.short; Message : access C.short; aes_global : System.Address);
+    pragma Import(C, mt_appl_write, "mt_appl_write");
+    procedure appl_write(appl_id : C.short; Message_Length : C.short; Message: access C.short);
+    
     function  mt_graf_handle (w, h, cw, ch : access C.short; global_aes : System.Address) return C.short;
     pragma Import(C, mt_graf_handle, "mt_graf_handle");
     function graf_handle(w, h, cw, ch : access C.short) return C.short;

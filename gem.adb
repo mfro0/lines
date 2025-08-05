@@ -6,6 +6,11 @@ package body GEM is
 	mt_appl_exit(aes_global);
     end appl_exit;
 
+    procedure appl_write(appl_id : C.short; Message_Length : C.short; Message: access C.short) is
+    begin
+        mt_appl_write(appl_id, Message_Length, Message, aes_global);
+    end appl_write;
+    
     function graf_handle(w, h, cw, ch : access C.short) return C.short is
     begin
 	return mt_graf_handle(w, h, cw, ch, aes_global);

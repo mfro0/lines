@@ -32,9 +32,10 @@ procedure Lines is
                                                                         others => 0);
 
     -- Handles
-    Vdi_Handle : aliased C.short;
-    Win        : C.short;
-    Work_Area  : Rectangle;
+    Vdi_Handle  : aliased C.short;
+    Win         : C.short;
+    Work_Area   : Rectangle;
+    app_id      : C.short;
 
     procedure Update_Trail(New_Line : Line) is
     begin
@@ -50,10 +51,10 @@ procedure Lines is
         for i in Trail'First .. Trail'Last - 1 loop
             if Trail(i + 1).p1.x >= 0 then
                 vsl_color(Vdi_Handle, 1);
-                Points(1) := C.short (Trail(i).p1.x);
-                Points(2) := C.short (Trail(i).p1.y);
-                Points(3) := C.short (Trail(i).p2.x);
-                Points(4) := C.short (Trail(i).p2.y);
+                Points(1) := Trail(i).p1.x + Work_Area.x;
+                Points(2) := Trail(i).p1.y + Work_Area.y;
+                Points(3) := Trail(i).p2.x + Work_Area.x;
+                Points(4) := Trail(i).p2.y + Work_Area.y;
                 vsl_color(Vdi_Handle, Trail(i).color);
                 v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
             end if;
@@ -110,7 +111,6 @@ procedure Lines is
         declare
             r2  : Rectangle;
         begin
-            -- wind_get(Win, WF_WORKXYWH, r1.x'Access, r1.y'Access, r1.w'Access, r1.h'Access);
             wind_get(Win, WF_FIRSTXYWH, r2.x'Access, r2.y'Access, r2.w'Access, r2.h'Access);
 
             while r2.w > 0 and r2.h > 0 loop
@@ -131,7 +131,12 @@ procedure Lines is
         end;
     end Redraw_Window;
 
-    app_id  : C.short;
+    procedure Send_Redraw(Win : C.short; x, y, w, h : C.short) is
+        Message : Array(0 .. 7) of aliased C.short := (WM_REDRAW, x, y, w, h, others => 0);
+    begin
+        appl_write(app_id, 16, Message(0)'Access);
+    end Send_Redraw;
+    
     col     : C.short := 0;
 begin
     app_id := appl_init;
@@ -148,7 +153,7 @@ begin
 
     Win := wind_create(NAME + CLOSER + MOVER + FULLER + SIZER, 50, 50, 320, 200);
     wind_open(Win, 50, 50, 320, 200);
-    wind_get(Win, 4, Work_Area.x'Access, Work_Area.y'Access, Work_Area.w'Access, Work_Area.h'Access);
+    wind_get(Win, WF_CURRXYWH, Work_Area.x'Access, Work_Area.y'Access, Work_Area.w'Access, Work_Area.h'Access);
 
     -- Main loop
     declare
@@ -156,9 +161,8 @@ begin
         Quit        : Boolean := False;
         MX, MY      : aliased C.short := 0;
         Dummy       : C.short;
-        p1          : Point := (Work_Area.x + 10, Work_Area.y + 10);
-        p2          : Point := (Work_Area.x + Work_Area.w - 10,
-                                Work_Area.y + Work_Area.h - 10);
+        p1          : Point := (10, 10);
+        p2          : Point := (Work_Area.w - 10, Work_Area.h - 10);
         dx1         : C.short := 3;
         dy1         : C.short := 4;
         dx2         : C.short := -3;
@@ -168,10 +172,10 @@ begin
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
     begin
         loop
-            p1.x := p1.x + dx1; if p1.x >= Work_Area.x + Work_Area.w or p1.x < Work_Area.x then dx1 := -dx1; end if;
-            p1.y := p1.y + dy1; if p1.y >= Work_Area.y + Work_Area.h or p1.y < Work_Area.y then dy1 := -dy1; end if;
-            p2.x := p2.x + dx2; if p2.x >= Work_Area.x + Work_Area.w or p2.x < Work_Area.x then dx2 := -dx2; end if;
-            p2.y := p2.y + dy2; if p2.y >= Work_Area.y + Work_Area.h or p2.y < Work_Area.y then dy2 := -dy2; end if;
+            p1.x := p1.x + dx1; if p1.x >= Work_Area.w or p1.x < 0 then dx1 := -dx1; end if;
+            p1.y := p1.y + dy1; if p1.y >= Work_Area.h or p1.y < 0 then dy1 := -dy1; end if;
+            p2.x := p2.x + dx2; if p2.x >= Work_Area.w or p2.x < 0 then dx2 := -dx2; end if;
+            p2.y := p2.y + dy2; if p2.y >= Work_Area.h or p2.y < 0 then dy2 := -dy2; end if;
 
             -- Random point inside work area
             Update_Trail((p1, p2, col));
@@ -194,6 +198,7 @@ begin
                     wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
                     wind_get(Win, WF_CURRXYWH, Work_Area.x'Access, Work_Area.y'Access,
                                                Work_Area.w'Access, Work_Area.h'Access);
+                    Send_Redraw(Win, Msg(4), Msg(5), Msg(6), Msg(7));
                 elsif Msg(0) = WM_FULLED then
                     null;
                 elsif Msg(0) = WM_CLOSED then
