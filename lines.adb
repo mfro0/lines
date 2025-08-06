@@ -215,7 +215,7 @@ begin
                     r   : aliased Rectangle;
                 begin
                     if not fulled then
-                        wind_get(0, WF_WORKXYWH, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
+                        wind_get(DESKTOP_HANDLE, WF_WORKXYWH, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
                         wind_set(Win, WF_CURRXYWH, r.x, r.y, r.w, r.h);
                         fulled := True;
                     else

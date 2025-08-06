@@ -195,4 +195,6 @@ package GEM is
     WF_ICONIFY          : constant C.short := 26;
     WF_TOOLBAR          : constant C.short := 30;
     WF_MENU             : constant C.short := 33;
+
+    DESKTOP_HANDLE      : constant C.short := 0;
 end GEM;
