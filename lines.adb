@@ -50,56 +50,32 @@ procedure Lines is
         Points : array(1 .. 4) of aliased C.short;
     begin
         for i in Trail'First .. Trail'Last - 1 loop
-            -- if Trail(i + 1).p1.x >= 0 then
-                vsl_color(Vdi_Handle, 1);
-                Points(1) := Trail(i).p1.x + Work_Area.x;
-                Points(2) := Trail(i).p1.y + Work_Area.y;
-                Points(3) := Trail(i).p2.x + Work_Area.x;
-                Points(4) := Trail(i).p2.y + Work_Area.y;
-                vsl_color(Vdi_Handle, Trail(i).color);
-                v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
+            vsl_color(Vdi_Handle, 1);
+            Points := (Trail(i).p1.x + Work_Area.x, Trail(i).p1.y + Work_Area.y,
+                       Trail(i).p2.x + Work_Area.x, Trail(i).p2.y + Work_Area.y);
+            vsl_color(Vdi_Handle, Trail(i).color);
+            v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
             -- end if;
         end loop;
     end Draw_Trail;
-
-    function Max(a, b : C.short) return C.short is
-    begin
-        if a > b then
-            return a;
-        else
-            return b;
-        end if;
-    end Max;
-
-    function Min(a, b : C.short) return C.short is
-    begin
-        if a < b then
-            return a;
-        else
-            return b;
-        end if;
-    end Min;
 
     function Rect_Intersect(R1 : in Rectangle; R2 : in out Rectangle) return Boolean is
         tx, ty, tw, th      : C.short;
         Ret                 : Boolean;
     begin
-        tx := Max(R2.x, R1.x);
-        tw := Min(R2.x + R2.w, R1.x + R1.w) - tx;
+        tx := C.short'Max(R2.x, R1.x);
+        tw := C.short'Min(R2.x + R2.w, R1.x + R1.w) - tx;
 
         Ret := (0 < tw);
 
         if Ret then
-            ty := Max(R2.y, R1.y);
-            th := Min(R2.y + R2.h, R1.y + R1.h) - ty;
+            ty := C.short'Max(R2.y, R1.y);
+            th := C.short'Min(R2.y + R2.h, R1.y + R1.h) - ty;
 
             Ret := (0 < th);
 
             if Ret then
-                R2.x := tx;
-                R2.y := ty;
-                R2.w := tw;
-                R2.h := th;
+                R2 := (tx, ty, tw, th);
             end if;
         end if;
         return Ret;
@@ -107,7 +83,6 @@ procedure Lines is
 
     procedure Redraw_Window is
         Clip : array (1 .. 4) of aliased C.short;
-
     begin
         declare
             r2  : Rectangle;
@@ -116,10 +91,7 @@ procedure Lines is
 
             while r2.w > 0 and r2.h > 0 loop
                 if Rect_Intersect(Work_Area, r2) then
-                    Clip(1) := r2.x;
-                    Clip(2) := r2.y;
-                    Clip(3) := r2.x + r2.w - 1;
-                    Clip(4) := r2.y + r2.h - 1;
+                    Clip := (r2.x, r2.y, r2.x + r2.w - 1, r2.y + r2.h - 1);
                     vs_clip(Vdi_Handle, 1, Clip(Clip'First)'Access);
                     vsf_interior(Vdi_Handle, FIS_SOLID);
                     vsf_color(Vdi_Handle, 1);
@@ -205,7 +177,7 @@ begin
                 Redraw_Window;
                 wind_update(0);
             elsif Msg(0) = WM_MOVED or
-                Msg(0) = WM_SIZED then
+                  Msg(0) = WM_SIZED then
                 wind_set(Win, WF_CURRXYWH, Msg(4), Msg(5), Msg(6), Msg(7));
                 wind_get(Win, WF_WORKXYWH, Work_Area.x'Access, Work_Area.y'Access,
                                            Work_Area.w'Access, Work_Area.h'Access);
