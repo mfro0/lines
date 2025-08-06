@@ -50,7 +50,7 @@ procedure Lines is
         Points : array(1 .. 4) of aliased C.short;
     begin
         for i in Trail'First .. Trail'Last - 1 loop
-            if Trail(i + 1).p1.x >= 0 then
+            -- if Trail(i + 1).p1.x >= 0 then
                 vsl_color(Vdi_Handle, 1);
                 Points(1) := Trail(i).p1.x + Work_Area.x;
                 Points(2) := Trail(i).p1.y + Work_Area.y;
@@ -58,7 +58,7 @@ procedure Lines is
                 Points(4) := Trail(i).p2.y + Work_Area.y;
                 vsl_color(Vdi_Handle, Trail(i).color);
                 v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
-            end if;
+            -- end if;
         end loop;
     end Draw_Trail;
 
@@ -162,16 +162,17 @@ begin
         Msg         : aliased Message_Array;
         Quit        : Boolean := False;
         MX, MY      : aliased C.short := 0;
-        Dummy       : C.short;
+        Event       : C.short;
         p1          : Point := (10, 10);
         p2          : Point := (Work_Area.w - 10, Work_Area.h - 10);
         dx1         : C.short := 3;
         dy1         : C.short := 4;
         dx2         : C.short := -3;
         dy2         : C.short := -5;
-        butdown     : C.short;
+        But_Down     : C.short;
         Timer_MS    : C.unsigned_long := 20;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
+        fulled      : Boolean := False;
     begin
         loop
             p1.x := p1.x + dx1; if p1.x >= Work_Area.w or p1.x < 0 then dx1 := -dx1; end if;
@@ -190,10 +191,10 @@ begin
             
             -- Random point inside work area
             Update_Trail((p1, p2, col));
-            col := (col + 1) mod 255;
+            col := (col + 1) mod 255; if col = 0 then col := 16; end if;
 
-            Dummy := evnt_multi(MU_MESAG + MU_BUTTON + MU_KEYBD + MU_TIMER,
-                                1, 1, butdown,
+            Event := evnt_multi(MU_MESAG + MU_BUTTON + MU_KEYBD + MU_TIMER,
+                                1, 1, But_Down,
                                 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0,
                                 Msg'Access, Timer_MS, MX'Access, MY'Access,
@@ -210,7 +211,21 @@ begin
                                            Work_Area.w'Access, Work_Area.h'Access);
                 Send_Redraw(Win, Work_Area.x, Work_Area.y, Work_Area.w, Work_Area.h);
             elsif Msg(0) = WM_FULLED then
-                null;
+                declare
+                    r   : aliased Rectangle;
+                begin
+                    if not fulled then
+                        wind_get(0, WF_WORKXYWH, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
+                        wind_set(Win, WF_CURRXYWH, r.x, r.y, r.w, r.h);
+                        fulled := True;
+                    else
+                        wind_get(Win, WF_PREVXYWH, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
+                        wind_set(Win, WF_CURRXYWH, r.x, r.y, r.w, r.h);
+                        fulled := False;
+                    end if;
+                    wind_get(Win, WF_WORKXYWH, Work_Area.x'Access, Work_Area.y'Access, Work_Area.w'Access, Work_Area.h'Access);
+                    Send_Redraw(Win, Work_Area.x, Work_Area.y, Work_Area.w, Work_Area.h);
+                end;
             elsif Msg(0) = WM_CLOSED then
                 Quit := True;
             end if;
