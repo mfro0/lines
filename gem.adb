@@ -51,6 +51,16 @@ package body GEM is
         mt_wind_set(wh, mode, x, y, w, h, aes_global);
     end wind_set;
 
+    procedure wind_set(wh, mode : C.short; r : Rectangle) is
+    begin
+        wind_set(wh, mode, r.x, r.y, r.w, r.h);
+    end wind_set;
+
+    procedure wind_get(wh, mode : C.short; r : access Rectangle) is
+    begin
+        wind_get(wh, mode, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
+    end wind_get;
+
     procedure wind_set_str(wh, mode : C.short; str : C.Strings.chars_ptr) is
     begin
         mt_wind_set_str(wh, mode, str, aes_global);
