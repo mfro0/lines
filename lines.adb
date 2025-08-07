@@ -84,7 +84,7 @@ procedure Lines is
     end Rect_Intersect;
 
     procedure Redraw_Window is
-        Clip    : Int16_Array_Type(1 .. 4);
+        Clip    : Int16_Array_Type(0 .. 3);
         r       : aliased Rectangle;
 
     begin
@@ -175,9 +175,10 @@ begin
                                 1, 1, Button_Down,
                                 False, 0, 0, 0, 0,
                                 False, 0, 0, 0, 0,
-                                Msg_Ptr, Timer_MS, MX, MY,
+                                Msg, Timer_MS, MX, MY,
                                 Mb_Return, Key_State,
                                 Key_Return, Ret);
+
             if Message_Type(Msg(0)) = Window_Redraw_Msg then
                 GEM.AES.Window.Update(Update_Begin);
                 Redraw_Window;
