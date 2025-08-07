@@ -1,3 +1,4 @@
+with "../gem_example/gem.gpr";
 
 project Lines is
    for Source_Dirs use (".");

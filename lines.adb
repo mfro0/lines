@@ -3,20 +3,24 @@ with Interfaces.C; use Interfaces.C;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 with System;
 with Ada.Text_IO;
-with GEM; use GEM;
+with GEM.AES; use GEM.AES;
+with GEM.AES.Window;
+with GEM.AES.Event; use GEM.AES.Event;
+with GEM.AES.Application; use GEM.AES.Application;
+with GEM.AES.Graf; use GEM.AES.Graf;
+with GEM.VDI; use GEM.VDI;
+with TOS; use TOS;
 
 
 procedure Lines is
-    package C renames Interfaces.C; use C;
-    
     -- Data
     type Point is record
-        x, y : C.short;
+        x, y : Int16;
     end record;
 
     type Line is Record
         p1, p2  : Point;
-        color   : C.short;
+        color   : Int16;
     end Record;
 
     Max_Trail : constant := 15;
@@ -25,7 +29,7 @@ procedure Lines is
                     p2 => (x => -1, y => -1),
                     others => 0));
 
-    Colors    : constant array (1 .. Max_Trail) of C.unsigned_short := (16#F800#,
+    Colors    : constant array (1 .. Max_Trail) of Uint16 := (16#F800#,
                                                                         16#C000#,
                                                                         16#9000#,
                                                                         16#6000#,
@@ -33,10 +37,10 @@ procedure Lines is
                                                                         others => 0);
 
     -- Handles
-    Vdi_Handle  : aliased C.short;
-    Win         : C.short;
+    Vdi_Handle  : aliased Int16;
+    Win         : GEM.AES.Window.Window_Handle;
     Work_Area   : aliased Rectangle;
-    app_id      : C.short;
+    app_id      : App_Id_Type;
 
     procedure Update_Trail(New_Line : Line) is
     begin
@@ -47,30 +51,30 @@ procedure Lines is
     end Update_Trail;
 
     procedure Draw_Trail is
-        Points : array(1 .. 4) of aliased C.short;
+        Points : Int16_Array_Type(0 .. 3);
     begin
         for i in Trail'First .. Trail'Last - 1 loop
-            vsl_color(Vdi_Handle, 1);
+            Set_Polyline_Color_Index(Vdi_Handle, 1);
             Points := (Trail(i).p1.x + Work_Area.x, Trail(i).p1.y + Work_Area.y,
                        Trail(i).p2.x + Work_Area.x, Trail(i).p2.y + Work_Area.y);
-            vsl_color(Vdi_Handle, Trail(i).color);
-            v_pline(Vdi_Handle, 2, Points(Points'First)'Access);
+            GEM.VDI.Set_Polyline_Color_Index(Vdi_Handle, Trail(i).color);
+            Polyline(Vdi_Handle, 2, Points);
             -- end if;
         end loop;
     end Draw_Trail;
 
     function Rect_Intersect(R1 : in Rectangle; R2 : in out Rectangle) return Boolean is
-        tx, ty, tw, th      : C.short;
+        tx, ty, tw, th      : Int16;
         Ret                 : Boolean;
     begin
-        tx := C.short'Max(R2.x, R1.x);
-        tw := C.short'Min(R2.x + R2.w, R1.x + R1.w) - tx;
+        tx := Int16'Max(R2.x, R1.x);
+        tw := Int16'Min(R2.x + R2.w, R1.x + R1.w) - tx;
 
         Ret := (0 < tw);
 
         if Ret then
-            ty := C.short'Max(R2.y, R1.y);
-            th := C.short'Min(R2.y + R2.h, R1.y + R1.h) - ty;
+            ty := Int16'Max(R2.y, R1.y);
+            th := Int16'Min(R2.y + R2.h, R1.y + R1.h) - ty;
 
             Ret := (0 < th);
 
@@ -82,43 +86,43 @@ procedure Lines is
     end Rect_Intersect;
 
     procedure Redraw_Window is
-        Clip    : array (1 .. 4) of aliased C.short;
+        Clip    : Int16_Array_Type(1 .. 4);
         r       : aliased Rectangle;
 
     begin
-        wind_get(Win, WF_FIRSTXYWH, r.x'Access, r.y'Access, r.w'Access, r.h'Access);
+        r := GEM.AES.Window.Get(Win, GEM.AES.Window.First_XYWH);
 
         while r.w > 0 and r.h > 0 loop
             if Rect_Intersect(Work_Area, r) then
                 Clip := (r.x, r.y, r.x + r.w - 1, r.y + r.h - 1);
-                vs_clip(Vdi_Handle, 1, Clip(Clip'First)'Access);
-                vsf_interior(Vdi_Handle, FIS_SOLID);
-                vsf_color(Vdi_Handle, 1);
-                vr_recfl(Vdi_Handle, Clip(Clip'First)'Access);
+                GEM.VDI.Set_Clipping_Rectangle(Vdi_Handle, True, Clip);
+                GEM.VDI.Set_Fill_Interior_Style(Vdi_Handle, Solid);
+                GEM.VDI.Set_Fill_Color_Index(Vdi_Handle, 1);
+                GEM.VDI.Fill_Rectangle(Vdi_Handle, Clip);
                 Draw_Trail;
-                vs_clip(Vdi_Handle, 0, Clip(Clip'First)'Access);
+                GEM.VDI.Set_Clipping_Rectangle(Vdi_Handle, False, Clip);
             end if;
-            wind_get(Win, WF_NEXTXYWH, r'Access);
+            r := GEM.AES.Window.Get(Win, GEM.AES.Window.Next_XYWH);
         end loop;
     end Redraw_Window;
 
-    procedure Send_Redraw(Win : C.short; r : Rectangle) is
-        Message : Array(0 .. 7) of aliased C.short := (WM_REDRAW, r.x, r.y, r.w, r.h, others => 0);
+    procedure Send_Redraw(Win : Int16; r : Rectangle) is
+        Message : Int16_Array_Type(0 .. 7) := (Int16(Window_Redraw_Msg), r.x, r.y, r.w, r.h, others => 0);
     begin
-        appl_write(app_id, Message'Length * C.short'Size / System.Storage_Unit, Message(0)'Access);
+        GEM.AES.Application.Write(app_id, Message);
     end Send_Redraw;
     
-    col     : C.short := 0;
+    col     : Int16 := 0;
 begin
-    app_id := appl_init;
+    app_id := GEM.AES.Application.Init;
     declare
-        Work_In  : Work_Array := (10 => 2, others => 1);
-        Work_Out : Int57_Array;
-        Dummy    : aliased C.short := 0;
+        Work_In  : Int16_Array_Type(0 .. 10) := (10 => 2, others => 1);
+        Work_Out : Int16_Array_Type(0 .. 57);
+        wc, hc, wb, hb : Int16 := 0;
     begin
-        Vdi_Handle := graf_handle(Dummy'Access, Dummy'Access, Dummy'Access, Dummy'Access);
+        Vdi_Handle := GEM.AES.Graf.Handle(wc, hc, wb, hb);
 
-        v_opnvwk(Work_In, Vdi_Handle'Access, Work_Out);
+        Open_Virtual_Screen_Workstation(Work_In, Vdi_Handle, Work_Out);
         graf_mouse(ARROW, System.Null_Address);
     end;
 
