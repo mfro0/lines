@@ -139,7 +139,7 @@ begin
         dy1         : C.short := 4;
         dx2         : C.short := -3;
         dy2         : C.short := -5;
-        But_Down     : C.short;
+        Button_Down : C.short;
         Timer_MS    : C.unsigned_long := 500;
         Mb_Return, Key_State, Key_Return, Ret : aliased C.short;
         fulled      : Boolean := False;
@@ -149,21 +149,26 @@ begin
             p1.y := p1.y + dy1; if p1.y >= Work_Area.h or p1.y < 0 then dy1 := -dy1; end if;
             p2.x := p2.x + dx2; if p2.x >= Work_Area.w or p2.x < 0 then dx2 := -dx2; end if;
             p2.y := p2.y + dy2; if p2.y >= Work_Area.h or p2.y < 0 then dy2 := -dy2; end if;
-            if p1.x < 0 then p1.x := 0; end if;
-            if p1.x >= Work_Area.w then p1.x := Work_Area.w - 1; end if;
-            if p2.x < 0 then p2.x := 0; end if;
-            if p2.x >= Work_Area.w then p2.x := Work_Area.w - 1; end if;
+            if p1.x < 0 then p1.x := 0;
+            elsif p1.x >= Work_Area.w then p1.x := Work_Area.w - 1;
+            end if;
+            if p2.x < 0 then p2.x := 0;
+            elsif p2.x >= Work_Area.w then p2.x := Work_Area.w - 1;
+            end if;
             
-            if p1.y < 0 then p1.y := 0; end if;
-            if p1.y >= Work_Area.h then p1.y := Work_Area.h - 1; end if;
-            if p2.y < 0 then p2.y := 0; end if;
-            if p2.y >= Work_Area.h then p2.y := Work_Area.h - 1; end if;
+            if p1.y < 0 then p1.y := 0;
+            elsif p1.y >= Work_Area.h then p1.y := Work_Area.h - 1;
+            end if;
+
+            if p2.y < 0 then p2.y := 0;
+            elsif p2.y >= Work_Area.h then p2.y := Work_Area.h - 1;
+            end if;
             
             Update_Trail((p1, p2, col));
             col := (col + 1) mod 255; if col = 0 then col := 16; end if;
 
             Event := evnt_multi(MU_MESAG + MU_BUTTON + MU_KEYBD + MU_TIMER,
-                                1, 1, But_Down,
+                                1, 1, Button_Down,
                                 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0,
                                 Msg'Access, Timer_MS, MX'Access, MY'Access,

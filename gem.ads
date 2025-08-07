@@ -13,8 +13,6 @@ package GEM is
     end record;
     pragma Convention(C, Rectangle);
 
-    subtype AES_Id is C.short;
-
     aes_global : System.Address;
     pragma Import(C, aes_global, "aes_global");
 
