@@ -1,6 +1,3 @@
-with Ada.Unchecked_Conversion;
-with System;
-with Ada.Text_IO;
 with GEM.AES; use GEM.AES;
 with GEM.AES.Window; use GEM.AES.Window;
 with GEM.AES.Event; use GEM.AES.Event;
@@ -35,9 +32,9 @@ procedure Lines is
                                                                         others => 0);
 
     -- Handles
-    Vdi_Handle  : aliased Int16;
+    Vdi_Handle  : Int16;
     Win         : GEM.AES.Window.Window_Handle;
-    Work_Area   : aliased Rectangle;
+    Work_Area   : Rectangle;
     app_id      : App_Id_Type;
 
     procedure Update_Trail(New_Line : Line) is
@@ -57,7 +54,6 @@ procedure Lines is
                        Trail(i).p2.x + Work_Area.x, Trail(i).p2.y + Work_Area.y);
             GEM.VDI.Set_Polyline_Color_Index(Vdi_Handle, Trail(i).color);
             Polyline(Vdi_Handle, 2, Points);
-            -- end if;
         end loop;
     end Draw_Trail;
 
@@ -131,9 +127,8 @@ begin
 
     -- Main loop
     declare
-        Msg         : aliased Message_Buffer;
-        Msg_Ptr     : constant Message_Buffer_Ptr := Msg'Unchecked_Access;
-        
+        Msg         : Message_Buffer;
+
         Quit        : Boolean := False;
         MX, MY      : Int16 := 0;
         Event       : Event_Type;
@@ -179,18 +174,18 @@ begin
                                 Mb_Return, Key_State,
                                 Key_Return, Ret);
 
-            if Message_Type(Msg(0)) = Window_Redraw_Msg then
+            if Msg(0) = Window_Redraw_Msg then
                 GEM.AES.Window.Update(Update_Begin);
                 Redraw_Window;
                 GEM.AES.Window.Update(Update_End);
-            elsif Message_Type(Msg(0)) = Window_Moved_Msg or
-                  Message_Type(Msg(0)) = Window_Sized_Msg then
+            elsif Msg(0) = Window_Moved_Msg or
+                  Msg(0) = Window_Sized_Msg then
                 GEM.AES.Window.Set(Win, Current_XYWH, Msg(4), Msg(5), Msg(6), Msg(7));
                 Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                 Send_Redraw(Win, Work_Area);
-            elsif Message_Type(Msg(0)) = Window_Fulled_Msg then
+            elsif Msg(0) = Window_Fulled_Msg then
                 declare
-                    r   : aliased Rectangle;
+                    r   : Rectangle;
                 begin
                     if not fulled then
                         r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
@@ -204,7 +199,7 @@ begin
                     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                     Send_Redraw(Win, Work_Area);
                 end;
-            elsif Message_Type(Msg(0)) = Window_Closed_Msg then
+            elsif Msg(0) = Window_Closed_Msg then
                 Quit := True;
             end if;
             exit when Quit;
