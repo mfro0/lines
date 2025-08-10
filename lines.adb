@@ -121,7 +121,7 @@ begin
     end;
 
     Win := GEM.AES.Window.Create(Namer + Closer + Mover + Fuller + Sizer, (50, 50, 320, 200));
-    GEM.AES.Window.Set(Win, GEM.AES.Window.Name, "Lines" & NUL);
+    GEM.AES.Window.Set(Win, GEM.AES.Window.Name, " Lines " & NUL);
     GEM.AES.Window.Open(Win, (50, 50, 320, 200));
     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
 
