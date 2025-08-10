@@ -1,6 +1,10 @@
 with "../gem_example/gem.gpr";
 
 project Lines is
+-- call gprbuild with "-Xver=Debug" to compile a debug version
+   type version is ("Debug", "Release");
+   ver : version := external("ver", "Release");
+
    for Source_Dirs use (".");
    for Object_Dir use "obj";
    for Exec_Dir use ".";
@@ -11,9 +15,34 @@ project Lines is
    package Builder is
       for Executable("lines.adb") use "lines.prg";
    end Builder;
+
    package Compiler is
-      for Switches("Ada") use ("-gnat2022", "-O2", "-gnatyr", "-ffunction-sections", "-fdata-sections");
+      case ver is
+         when "Debug" =>
+            for Switches("Ada") use ("-gnat2022",
+                                     "-gnatX",
+                                     "-ffunction-sections",
+                                     "-fdata-sections",
+                                     "-g2",
+                                     "-Wall",
+                                     "-fno-strict-aliasing",
+                                     "-gnatyr",
+                                     "-gnatwJ");
+         when "Release" =>
+            for Switches("Ada") use ("-gnat2022",
+                                     "-gnatX",
+                                     "-ffunction-sections",
+                                     "-fdata-sections",
+                                     "-Wall",
+                                     "-O2",
+                                     "-gnatyr",
+                                     "-gnatp",
+                                     "-gnatwJ");
+         when others =>
+            null;
+      end case;
    end Compiler;
+
    package Linker is
       for Switches("Ada") use ("-s", "-Wl,--gc-sections", "-lgem");
       for Map_File_Option use "-Wl,-Map,";

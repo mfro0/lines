@@ -143,7 +143,7 @@ begin
         Mb_Return, Key_State, Key_Return, Ret : Int16;
         fulled      : Boolean := False;
     begin -- Lines
-        loop
+        while not Quit loop
             p1.x := p1.x + dx1; if p1.x >= Work_Area.w or p1.x < 0 then dx1 := -dx1; end if;
             p1.y := p1.y + dy1; if p1.y >= Work_Area.h or p1.y < 0 then dy1 := -dy1; end if;
             p2.x := p2.x + dx2; if p2.x >= Work_Area.w or p2.x < 0 then dx2 := -dx2; end if;
@@ -201,7 +201,6 @@ begin
             elsif Msg(0) = Window_Closed_Msg then
                 Quit := True;
             end if;
-            exit when Quit;
         end loop;
     end;
 
