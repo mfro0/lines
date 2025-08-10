@@ -5,7 +5,8 @@ with GEM.AES.Application; use GEM.AES.Application;
 with GEM.AES.Graf; use GEM.AES.Graf;
 with GEM.VDI; use GEM.VDI;
 with TOS; use TOS;
-
+with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
+with Ada.Text_IO;
 
 procedure Lines is
     -- Data
@@ -35,7 +36,7 @@ procedure Lines is
     Vdi_Handle  : Int16;
     Win         : GEM.AES.Window.Window_Handle;
     Work_Area   : Rectangle;
-    app_id      : App_Id_Type;
+    App_Id      : App_Id_Type;
 
     procedure Update_Trail(New_Line : Line) is
     begin
@@ -81,7 +82,7 @@ procedure Lines is
 
     procedure Redraw_Window is
         Clip    : Int16_Array_Type(0 .. 3);
-        r       : aliased Rectangle;
+        r       : Rectangle;
 
     begin
         r := GEM.AES.Window.Get(Win, GEM.AES.Window.First_XYWH);
@@ -103,27 +104,26 @@ procedure Lines is
     procedure Send_Redraw(Win : Window_Handle; r : Rectangle) is
         Message : Int16_Array_Type(0 .. 7) := (Int16(Window_Redraw_Msg), r.x, r.y, r.w, r.h, others => 0);
     begin
-        GEM.AES.Application.Write(app_id, Message);
+        GEM.AES.Application.Write(App_Id, Message);
     end Send_Redraw;
     
     col     : Int16 := 0;
 begin
-    app_id := GEM.AES.Application.Init;
+    App_Id := GEM.AES.Application.Init;
     declare
         Work_In  : Int16_Array_Type(0 .. 10) := (10 => 2, others => 1);
-        Work_Out : Int16_Array_Type(0 .. 57);
+        Work_Out : Int16_Array_Type(0 .. 56);
         wc, hc, wb, hb : Int16 := 0;
     begin
         Vdi_Handle := GEM.AES.Graf.Handle(wc, hc, wb, hb);
-
         Open_Virtual_Screen_Workstation(Work_In, Vdi_Handle, Work_Out);
         GEM.AES.Graf.Mouse(Arrow);
     end;
 
-    Win := GEM.AES.Window.Create(Namer + Closer + GEM.AES.Window.Mover + Fuller + Sizer, (50, 50, 320, 200));
-    GEM.AES.Window.Set(Win, Name, "Lines");
+    Win := GEM.AES.Window.Create(Namer + Closer + Mover + Fuller + Sizer, (50, 50, 320, 200));
+    GEM.AES.Window.Set(Win, GEM.AES.Window.Name, "Lines" & NUL);
     GEM.AES.Window.Open(Win, (50, 50, 320, 200));
-    Work_Area := GEM.AES.Window.Get(Win, Current_XYWH);
+    Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
 
     -- Main loop
     declare
@@ -190,12 +190,11 @@ begin
                     if not fulled then
                         r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
                         GEM.AES.Window.Set(Win, Current_XYWH, r);
-                        fulled := True;
                     else
                         r := GEM.AES.Window.Get(Win, Previous_XYWH);
                         GEM.AES.Window.Set(Win, Current_XYWH, r);
-                        fulled := False;
                     end if;
+                    fulled := not fulled;
                     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                     Send_Redraw(Win, Work_Area);
                 end;
