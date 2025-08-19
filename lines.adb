@@ -74,7 +74,7 @@ procedure Lines is
             Ret := (0 < th);
 
             if Ret then
-                R2 := (tx, ty, tw, th);
+                R2 := Rectangle'(tx, ty, tw, th);
             end if;
         end if;
         return Ret;
@@ -87,7 +87,7 @@ procedure Lines is
     begin
         r := GEM.AES.Window.Get(Win, GEM.AES.Window.First_XYWH);
 
-        while r.w > 0 and r.h > 0 loop
+        while r.w > 0 and then r.h > 0 loop
             if Rect_Intersect(Work_Area, r) then
                 Clip := (r.x, r.y, r.x + r.w - 1, r.y + r.h - 1);
                 GEM.VDI.Set_Clipping_Rectangle(Vdi_Handle, True, Clip);
@@ -144,10 +144,10 @@ begin
         fulled      : Boolean := False;
     begin -- Lines
         while not Quit loop
-            p1.x := p1.x + dx1; if p1.x >= Work_Area.w or p1.x < 0 then dx1 := -dx1; end if;
-            p1.y := p1.y + dy1; if p1.y >= Work_Area.h or p1.y < 0 then dy1 := -dy1; end if;
-            p2.x := p2.x + dx2; if p2.x >= Work_Area.w or p2.x < 0 then dx2 := -dx2; end if;
-            p2.y := p2.y + dy2; if p2.y >= Work_Area.h or p2.y < 0 then dy2 := -dy2; end if;
+            p1.x := p1.x + dx1; if p1.x >= Work_Area.w or else p1.x < 0 then dx1 := -dx1; end if;
+            p1.y := p1.y + dy1; if p1.y >= Work_Area.h or else p1.y < 0 then dy1 := -dy1; end if;
+            p2.x := p2.x + dx2; if p2.x >= Work_Area.w or else p2.x < 0 then dx2 := -dx2; end if;
+            p2.y := p2.y + dy2; if p2.y >= Work_Area.h or else p2.y < 0 then dy2 := -dy2; end if;
             if p1.x < 0 then p1.x := 0;
             elsif p1.x >= Work_Area.w then p1.x := Work_Area.w - 1;
             end if;
