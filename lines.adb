@@ -19,7 +19,7 @@ procedure Lines is
         color   : Int16;
     end Record;
 
-    Max_Trail : constant := 15;
+    Max_Trail : constant := 100;
     Trail     : array (1 .. Max_Trail) of Line :=
         (others => (p1 => (x => -1, y => -1),
                     p2 => (x => -1, y => -1),
