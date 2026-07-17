@@ -123,7 +123,7 @@ begin
         GEM.AES.Graf.Mouse(Arrow);
     end;
 
-    Win := GEM.AES.Window.Create(Namer + Closer + Mover + Fuller + Sizer, (50, 50, 320, 200));
+    Win := GEM.AES.Window.Create(Namer or Closer or Mover or Fuller or Sizer, (50, 50, 320, 200));
     GEM.AES.Window.Set(Win, GEM.AES.Window.Name, " Lines " & NUL);
     GEM.AES.Window.Open(Win, (50, 50, 320, 200));
     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
@@ -171,7 +171,7 @@ begin
             Update_Trail((p1, p2, col));
             col := (col + 1) mod 255; if col = 0 then col := 16; end if;
 
-            Event := GEM.AES.Event.Multi(Message_Event or Timer_Event or Button_Event,
+            Event := GEM.AES.Event.Multi(Message_Event or Timer_Event or Keyboard_Event,
                                 1, 1, Button_Down,
                                 False, 0, 0, 0, 0,
                                 False, 0, 0, 0, 0,
@@ -203,6 +203,8 @@ begin
                         Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                         Send_Redraw(Win, Work_Area);
                     end;
+                elsif Msg(0) = Window_Topped_Msg then
+                    GEM.AES.Window.Set(Win, Top, Work_Area);
                 elsif Msg(0) = Window_Closed_Msg then
                     Quit := True;
                 end if;
