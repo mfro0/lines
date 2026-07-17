@@ -6,7 +6,7 @@ with GEM.AES.Graf; use GEM.AES.Graf;
 with GEM.VDI; use GEM.VDI;
 with TOS; use TOS;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Text_IO;
+with Ada.Text_IO; use Ada.Text_IO;
 
 procedure Lines is
     -- Data
@@ -108,10 +108,13 @@ procedure Lines is
     end Send_Redraw;
     
     col     : Int16 := 0;
+    
+    package Int_IO is new Integer_IO(Integer);
+
 begin
     App_Id := GEM.AES.Application.Init;
     declare
-        Work_In  : Int16_Array_Type(0 .. 10) := (10 => 2, others => 1);
+        Work_In  : constant Int16_Array_Type(0 .. 10) := (10 => 2, others => 1);
         Work_Out : Int16_Array_Type(0 .. 56);
         wc, hc, wb, hb : Int16 := 0;
     begin
@@ -138,11 +141,12 @@ begin
         dy1         : Int16 := 4;
         dx2         : Int16 := -3;
         dy2         : Int16 := -5;
-        Button_Down : Int16;
-        Timer_MS    : Long_Integer := 5000;
+        Button_Down : constant Int16 := 0;
+        Timer_MS    : constant Long_Integer := 10;
         Mb_Return, Key_State, Key_Return, Ret : Int16;
         fulled      : Boolean := False;
-    begin -- Lines
+        
+    begin -- Lines    
         while not Quit loop
             p1.x := p1.x + dx1; if p1.x >= Work_Area.w or else p1.x < 0 then dx1 := -dx1; end if;
             p1.y := p1.y + dy1; if p1.y >= Work_Area.h or else p1.y < 0 then dy1 := -dy1; end if;
@@ -167,7 +171,7 @@ begin
             Update_Trail((p1, p2, col));
             col := (col + 1) mod 255; if col = 0 then col := 16; end if;
 
-            Event := GEM.AES.Event.Multi(Message_Event + Button_Event + Keyboard_Event + Timer_Event,
+            Event := GEM.AES.Event.Multi(Message_Event or Timer_Event or Button_Event,
                                 1, 1, Button_Down,
                                 False, 0, 0, 0, 0,
                                 False, 0, 0, 0, 0,
@@ -175,33 +179,43 @@ begin
                                 Mb_Return, Key_State,
                                 Key_Return, Ret);
 
-            if Msg(0) = Window_Redraw_Msg then
-                GEM.AES.Window.Update(Update_Begin);
-                Redraw_Window;
-                GEM.AES.Window.Update(Update_End);
-            elsif Msg(0) = Window_Moved_Msg or
-                  Msg(0) = Window_Sized_Msg then
-                GEM.AES.Window.Set(Win, Current_XYWH, Msg(4), Msg(5), Msg(6), Msg(7));
-                Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
-                Send_Redraw(Win, Work_Area);
-            elsif Msg(0) = Window_Fulled_Msg then
-                declare
-                    r   : Rectangle;
-                begin
-                    if not fulled then
-                        r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
-                        GEM.AES.Window.Set(Win, Current_XYWH, r);
-                    else
-                        r := GEM.AES.Window.Get(Win, Previous_XYWH);
-                        GEM.AES.Window.Set(Win, Current_XYWH, r);
-                    end if;
-                    fulled := not fulled;
+            if (Event and Message_Event) /= 0 then
+                if Msg(0) = Window_Redraw_Msg then
+                    GEM.AES.Window.Update(Update_Begin);
+                    Redraw_Window;
+                    GEM.AES.Window.Update(Update_End);
+                elsif Msg(0) = Window_Moved_Msg or else Msg(0) = Window_Sized_Msg then
+                    GEM.AES.Window.Set(Win, Current_XYWH, Msg(4), Msg(5), Msg(6), Msg(7));
                     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                     Send_Redraw(Win, Work_Area);
-                end;
-            elsif Msg(0) = Window_Closed_Msg then
-                Quit := True;
+                elsif Msg(0) = Window_Fulled_Msg then
+                    declare
+                        r   : Rectangle;
+                    begin
+                        if not fulled then
+                            r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
+                            GEM.AES.Window.Set(Win, Current_XYWH, r);
+                        else
+                            r := GEM.AES.Window.Get(Win, Previous_XYWH);
+                            GEM.AES.Window.Set(Win, Current_XYWH, r);
+                        end if;
+                        fulled := not fulled;
+                        Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
+                        Send_Redraw(Win, Work_Area);
+                    end;
+                elsif Msg(0) = Window_Closed_Msg then
+                    Quit := True;
+                end if;
             end if;
+            if (Event and Timer_Event) /= 0 then
+                -- Ada.Text_IO.Put_Line(Event_Type'Image(Event));
+                Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
+                Send_Redraw(Win, Work_Area);
+            end if;
+            
+            GEM.AES.Application.Yield;
+            -- Int_IO.Put(Integer(Event), Base => 16);
+            -- Ada.Text_IO.Put_Line("");
         end loop;
     end;
 
