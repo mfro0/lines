@@ -139,7 +139,7 @@ begin
         dx2         : Int16 := -3;
         dy2         : Int16 := -5;
         Button_Down : Int16;
-        Timer_MS    : Long_Integer := 500;
+        Timer_MS    : Long_Integer := 5000;
         Mb_Return, Key_State, Key_Return, Ret : Int16;
         fulled      : Boolean := False;
     begin -- Lines
@@ -148,6 +148,7 @@ begin
             p1.y := p1.y + dy1; if p1.y >= Work_Area.h or else p1.y < 0 then dy1 := -dy1; end if;
             p2.x := p2.x + dx2; if p2.x >= Work_Area.w or else p2.x < 0 then dx2 := -dx2; end if;
             p2.y := p2.y + dy2; if p2.y >= Work_Area.h or else p2.y < 0 then dy2 := -dy2; end if;
+            
             if p1.x < 0 then p1.x := 0;
             elsif p1.x >= Work_Area.w then p1.x := Work_Area.w - 1;
             end if;
