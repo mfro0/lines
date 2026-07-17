@@ -108,8 +108,6 @@ procedure Lines is
     end Send_Redraw;
     
     col     : Int16 := 0;
-    
-    package Int_IO is new Integer_IO(Integer);
 
 begin
     App_Id := GEM.AES.Application.Init;
@@ -216,8 +214,13 @@ begin
             end if;
             
             GEM.AES.Application.Yield;
-            -- Int_IO.Put(Integer(Event), Base => 16);
-            -- Ada.Text_IO.Put_Line("");
+            
+            -- declare
+            --     package Int_IO is new Integer_IO(Integer);
+            -- begin    
+            --     Int_IO.Put(Integer(Event), Base => 16);
+            --     Ada.Text_IO.Put_Line("");
+            -- end;
         end loop;
     end;
 
