@@ -1,64 +1,71 @@
 with "../gem_example/gem.gpr";
 
 project Lines is
--- call gprbuild with "-Xver=Debug" to compile a debug version
-   type version is ("Debug", "Release");
-   ver : version := external("ver", "Release");
-   type cputype is ("m68k", "v4e");
-   cpu : cputype := external("cpu", "m68k");
-   
+    -- call gprbuild with "-Xver=Debug" to compile a debug version
+    type version is ("Debug", "Release");
+    ver : version := external("ver", "Release");
 
-   for Source_Dirs use (".");
-   for Object_Dir use "obj";
-   for Exec_Dir use ".";
-   for Main use ("lines.adb");
+    -- call witn "-Xcpu=v4e" to compile a Coldfire executale
+    type cputype is ("m68k", "v4e");
+    cpu : cputype := external("cpu", "m68k");
 
-   for Default_Language use "Ada";
-   for Target use "m68k-atari-mintelf";
 
-   case cpu is
-      when "m68k" =>
-         null;
-      when "v4e" =>
-         for Runtime("Ada") use "/usr/lib/gcc/m68k-atari-mintelf/13.3.0/m5475";
-   end case;
+    for Source_Dirs use (".");
+    for Object_Dir use "obj";
+    for Exec_Dir use ".";
+    for Main use ("lines.adb");
 
-   package Builder is
-      for Executable("lines.adb") use "lines.prg";
-   end Builder;
+    for Default_Language use "Ada";
+    for Target use "m68k-atari-mintelf";
 
-   package Compiler is
-      case ver is
-         when "Debug" =>
-            for Switches("Ada") use ("-v", "-gnat2022",
-                                     "-gnatX",
-                                     "-ffunction-sections",
-                                     "-fdata-sections",
-                                     "-g2",
-                                     "-Wall",
-                                     "-fno-strict-aliasing",
-                                     "-gnatyr",
-                                     "-gnatwJ",
-                                     "-mcpu=5475");
-         when "Release" =>
-            for Switches("Ada") use ("-gnat2022",
-                                     "-gnatX",
-                                     "-ffunction-sections",
-                                     "-fdata-sections",
-                                     "-Wall",
-                                     "-O2",
-                                     "-gnatyr",
-                                     "-gnatp",
-                                     "-gnatwJ",
-                                     "-mcpu=5475");
-         when others =>
+    case cpu is
+        when "m68k" =>
             null;
-      end case;
-   end Compiler;
+        when "v4e" =>
+            for Runtime("Ada") use "/usr/lib/gcc/m68k-atari-mintelf/13.3.0/m5475";
+    end case;
 
-   package Linker is
-      for Leading_Switches("Ada") use ("-mcpu=5475", "--RTS=m5475");
-      for Switches("Ada") use ("-s", "-Wl,--gc-sections", "-lgem");
-      for Map_File_Option use "-Wl,-Map,";
-   end Linker;
+    package Builder is
+        for Executable("lines.adb") use "lines.prg";
+    end Builder;
+
+    package Compiler is
+        Compiler_Switches := ("-v", "-gnat2022",
+                              "-gnatX",
+                              "-ffunction-sections",
+                              "-fdata-sections",
+                              "-Wall",
+                              "-fno-strict-aliasing",
+                              "-gnatyr",
+                              "-gnatwJ");
+
+        case ver is
+            when "Debug" =>
+                case cpu is
+                    when "v4e" =>
+                        for Switches("Ada") use Compiler_Switches & "-mcpu=5475" & "-g";
+                    when others =>
+                        for Switches("Ada") use Compiler_Switches & "-g";
+                end case;
+
+            when "Release" =>
+                case cpu is
+                    when "v4e" =>
+                        for Switches("Ada") use Compiler_Switches & "-mcpu=5475" & "-O2";
+                    when others =>
+                        for Switches("Ada") use Compiler_Switches & "-O2";
+                end case;
+        end case;
+    end Compiler;
+
+    package Linker is
+        case cpu is
+            when "v4e"   =>
+                for Leading_Switches("Ada") use ("-mcpu=5475", "--RTS=m5475");
+            when others =>
+                null;
+        end case;
+        for Switches("Ada") use ("-s", "-Wl,--gc-sections", "-lgem");
+        for Map_File_Option use "-Wl,-Map,";
+    end Linker;
 end Lines;

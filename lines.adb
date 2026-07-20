@@ -21,16 +21,18 @@ procedure Lines is
 
     Max_Trail : constant := 100;
     Trail     : array (1 .. Max_Trail) of Line :=
-        (others => (p1 => (x => -1, y => -1),
-                    p2 => (x => -1, y => -1),
-                    others => 0));
+                        (others => (p1 => (x => -1, y => -1),
+                         p2 => (x => -1, y => -1),
+                         others => 0)
+                      );
 
     Colors    : constant array (1 .. Max_Trail) of Uint16 := (16#F800#,
-                                                                        16#C000#,
-                                                                        16#9000#,
-                                                                        16#6000#,
-                                                                        16#3000#,
-                                                                        others => 0);
+                                                              16#C000#,
+                                                              16#9000#,
+                                                              16#6000#,
+                                                              16#3000#,
+                                                              others => 0
+                                                             );
 
     -- Handles
     Vdi_Handle  : Int16;
@@ -122,7 +124,7 @@ begin
     end;
 
     Win := GEM.AES.Window.Create(Namer or Closer or Mover or Fuller or Sizer, (50, 50, 320, 200));
-    GEM.AES.Window.Set(Win, GEM.AES.Window.Name, " Lines " & NUL);
+    GEM.AES.Window.Set(Win, GEM.AES.Window.Name, " Ada Lines " & NUL);
     GEM.AES.Window.Open(Win, (50, 50, 320, 200));
     Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
 
@@ -170,12 +172,12 @@ begin
             col := (col + 1) mod 255; if col = 0 then col := 16; end if;
 
             Event := GEM.AES.Event.Multi(Message_Event or Timer_Event or Keyboard_Event,
-                                1, 1, Button_Down,
-                                False, 0, 0, 0, 0,
-                                False, 0, 0, 0, 0,
-                                Msg, Timer_MS, MX, MY,
-                                Mb_Return, Key_State,
-                                Key_Return, Ret);
+                                         1, 1, Button_Down,
+                                         False, 0, 0, 0, 0,
+                                         False, 0, 0, 0, 0,
+                                         Msg, Timer_MS, MX, MY,
+                                         Mb_Return, Key_State,
+                                         Key_Return, Ret);
 
             if (Event and Message_Event) /= 0 then
                 if Msg(0) = Window_Redraw_Msg then
@@ -208,7 +210,6 @@ begin
                 end if;
             end if;
             if (Event and Timer_Event) /= 0 then
-                -- Ada.Text_IO.Put_Line(Event_Type'Image(Event));
                 Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                 Send_Redraw(Win, Work_Area);
             end if;
