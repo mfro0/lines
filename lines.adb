@@ -6,7 +6,6 @@ with GEM.AES.Graf; use GEM.AES.Graf;
 with GEM.VDI; use GEM.VDI;
 with TOS; use TOS;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Text_IO; use Ada.Text_IO;
 
 procedure Lines is
     -- Data
@@ -26,6 +25,7 @@ procedure Lines is
                          others => 0)
                       );
 
+
     Colors    : constant array (1 .. Max_Trail) of Uint16 := (16#F800#,
                                                               16#C000#,
                                                               16#9000#,
@@ -33,6 +33,7 @@ procedure Lines is
                                                               16#3000#,
                                                               others => 0
                                                              );
+    pragma Unreferenced(Colors);
 
     -- Handles
     Vdi_Handle  : Int16;
@@ -104,6 +105,7 @@ procedure Lines is
     end Redraw_Window;
 
     procedure Send_Redraw(Win : Window_Handle; r : Rectangle) is
+        pragma Unreferenced(Win);
         Message : Int16_Array_Type(0 .. 7) := (Int16(Window_Redraw_Msg), r.x, r.y, r.w, r.h, others => 0);
     begin
         GEM.AES.Application.Write(App_Id, Message);
@@ -180,34 +182,42 @@ begin
                                          Key_Return, Ret);
 
             if (Event and Message_Event) /= 0 then
-                if Msg(0) = Window_Redraw_Msg then
-                    GEM.AES.Window.Update(Update_Begin);
-                    Redraw_Window;
-                    GEM.AES.Window.Update(Update_End);
-                elsif Msg(0) = Window_Moved_Msg or else Msg(0) = Window_Sized_Msg then
-                    GEM.AES.Window.Set(Win, Current_XYWH, Msg(4), Msg(5), Msg(6), Msg(7));
-                    Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
-                    Send_Redraw(Win, Work_Area);
-                elsif Msg(0) = Window_Fulled_Msg then
-                    declare
-                        r   : Rectangle;
-                    begin
-                        if not fulled then
-                            r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
-                            GEM.AES.Window.Set(Win, Current_XYWH, r);
-                        else
-                            r := GEM.AES.Window.Get(Win, Previous_XYWH);
-                            GEM.AES.Window.Set(Win, Current_XYWH, r);
-                        end if;
-                        fulled := not fulled;
+                case Msg(0) is
+                    when Window_Redraw_Msg =>
+                        GEM.AES.Window.Update(Update_Begin);
+                        Redraw_Window;
+                        GEM.AES.Window.Update(Update_End);
+
+                    when Window_Moved_Msg | Window_Sized_Msg =>
+                        GEM.AES.Window.Set(Win, Current_XYWH, Msg(4), Msg(5), Msg(6), Msg(7));
                         Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
                         Send_Redraw(Win, Work_Area);
-                    end;
-                elsif Msg(0) = Window_Topped_Msg then
-                    GEM.AES.Window.Set(Win, Top, Work_Area);
-                elsif Msg(0) = Window_Closed_Msg then
-                    Quit := True;
-                end if;
+
+                    when Window_Fulled_Msg =>
+                        declare
+                            r   : Rectangle;
+                        begin
+                            if not fulled then
+                                r := GEM.AES.Window.Get(Desktop_Handle, Work_XYWH);
+                                GEM.AES.Window.Set(Win, Current_XYWH, r);
+                            else
+                                r := GEM.AES.Window.Get(Win, Previous_XYWH);
+                                GEM.AES.Window.Set(Win, Current_XYWH, r);
+                            end if;
+                            fulled := not fulled;
+                            Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
+                            Send_Redraw(Win, Work_Area);
+                        end;
+
+                    when Window_Topped_Msg =>
+                        GEM.AES.Window.Set(Win, Top, Work_Area);
+
+                    when Window_Closed_Msg =>
+                        Quit := True;
+
+                    when others =>
+                        null;
+                end case;
             end if;
             if (Event and Timer_Event) /= 0 then
                 Work_Area := GEM.AES.Window.Get(Win, Work_XYWH);
