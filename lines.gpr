@@ -22,7 +22,7 @@ project Lines is
         when "m68k" =>
             null;
         when "v4e" =>
-            for Runtime("Ada") use "/usr/lib/gcc/m68k-atari-mintelf/13.3.0/m5475";
+            for Runtime("Ada") use "/usr/lib/gcc/m68k-atari-mintelf/13.4.0/m5475";
     end case;
 
     package Builder is
