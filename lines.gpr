@@ -30,7 +30,7 @@ project Lines is
     end Builder;
 
     package Compiler is
-        Compiler_Switches := ("-v", "-gnat2022",
+        Compiler_Switches := ("-gnat2022",
                               "-gnatX",
                               "-ffunction-sections",
                               "-fdata-sections",
