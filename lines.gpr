@@ -65,7 +65,11 @@ project Lines is
             when others =>
                 null;
         end case;
-        for Switches("Ada") use ("-s", "-Wl,--gc-sections", "-lgem");
+        for Switches("Ada") use ("-s",
+                                 "-Wl,--gc-sections",
+                                 "-Wl,--print-gc-sections",
+                                 "-Wl,-Map", "mapfile",
+                                 "-lgem");
         for Map_File_Option use "-Wl,-Map,";
     end Linker;
 end Lines;
